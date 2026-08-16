@@ -20,8 +20,11 @@ dig +short chat.heineraboka.site   # should print the server IP
 ## 2. Get the code onto the server
 
 ```bash
-git clone <your repo> nerkyot && cd nerkyot
+git clone https://github.com/Hner123/ner-AI && cd ner-AI
 ```
+
+Docker must be installed and running on the server, and **port 3000 must be
+free** — check with `sudo lsof -i :3000` (nothing should be listening).
 
 ## 3. Configure
 
@@ -32,10 +35,22 @@ nano .env.docker
 
 Fill in, in this order:
 
-| Value | How |
+Generate the two secrets first (`openssl` is on every server; Node isn't,
+since everything here runs in containers):
+
+```bash
+echo "AUTH_SECRET=$(openssl rand -base64 32)"
+echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)"
+```
+
+`openssl rand -hex` for the database password on purpose: that value also goes
+*inside* `DATABASE_URL`, and base64 can emit `/` `+` `=`, which would break the
+URL and produce a confusing authentication failure.
+
+| Value | Notes |
 |---|---|
-| `POSTGRES_PASSWORD` | `node -e "console.log(require('crypto').randomBytes(24).toString('base64url'))"` — then paste the **same** value into `DATABASE_URL` |
-| `AUTH_SECRET` | `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` — **generate a fresh one**, don't reuse the dev value |
+| `POSTGRES_PASSWORD` | paste the **same** value into `DATABASE_URL` too |
+| `AUTH_SECRET` | **generate a fresh one** — never reuse the development value |
 | `GDS_GATEWAY_KEY` | a `gds_live_…` key from the gateway dashboard |
 | `ALLOWED_MODELS` | must be a subset of that key's `model_whitelist` |
 
