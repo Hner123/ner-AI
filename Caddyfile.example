@@ -1,0 +1,36 @@
+# Caddy site block for NerKyot. Caddy gets the TLS certificate automatically,
+# so all you need is a DNS A/AAAA record for the name pointing at this server.
+#
+# Add this alongside your existing ai-gateway block. Two settings are
+# load-bearing:
+#
+#   flush_interval -1
+#     Chat replies stream over SSE. With Caddy's default buffering the whole
+#     answer arrives at once, several seconds late, and looks like the app has
+#     hung. This is the same setting the gateway's own Caddyfile needs, for
+#     the same reason.
+#
+#   request_body max_size
+#     Document uploads (/api/extract) accept up to 15MB. Caddy doesn't limit
+#     request bodies by default; this just makes the ceiling explicit and
+#     stops a large upload from being silently truncated somewhere else.
+
+chat.heineraboka.site {
+    encode gzip
+
+    request_body {
+        max_size 20MB
+    }
+
+    # If Caddy runs on the host, the app is on loopback (see docker-compose.yml).
+    reverse_proxy 127.0.0.1:3000 {
+        flush_interval -1
+    }
+
+    # If Caddy runs INSIDE Docker instead, delete the block above, put Caddy
+    # and NerKyot on the same Docker network, and address it by service name:
+    #
+    # reverse_proxy ner-ai:3000 {
+    #     flush_interval -1
+    # }
+}

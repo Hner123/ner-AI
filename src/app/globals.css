@@ -1,26 +1,183 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Interface chrome (nav, labels, controls) is monospace; message text is not. */
+  --font-heading: var(--font-mono);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-chat-user: var(--chat-user);
+  --color-chat-user-foreground: var(--chat-user-foreground);
+  --color-chat-ai: var(--chat-ai);
+  --color-chat-ai-foreground: var(--chat-ai-foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ============================================================
+   "Console" direction — terminal heritage.
+   Warm-neutral paper in light, GitHub-dark-adjacent ground in dark, amber
+   as the single accent. Corners stay tight (6px) so nothing reads soft.
+   ============================================================ */
+
+:root {
+  --background: #fafaf7;
+  --foreground: #16181d;
+  --card: #ffffff;
+  --card-foreground: #16181d;
+  --popover: #ffffff;
+  --popover-foreground: #16181d;
+  --primary: #16181d;
+  --primary-foreground: #fafaf7;
+  --secondary: #f1f1ea;
+  --secondary-foreground: #16181d;
+  --muted: #f1f1ea;
+  --muted-foreground: #5c6370;
+  --accent: #e7e7dc;
+  --accent-foreground: #16181d;
+  --destructive: #b4232a;
+  --border: #e1e1d7;
+  --input: #e1e1d7;
+  --ring: #b45309;
+  --chart-1: #b45309;
+  --chart-2: #5c6370;
+  --chart-3: #16181d;
+  --chart-4: #8a6a3b;
+  --chart-5: #a3a396;
+  --radius: 0.375rem;
+  --sidebar: #f1f1ea;
+  --sidebar-foreground: #16181d;
+  --sidebar-primary: #16181d;
+  --sidebar-primary-foreground: #fafaf7;
+  --sidebar-accent: #e7e7dc;
+  --sidebar-accent-foreground: #16181d;
+  --sidebar-border: #e1e1d7;
+  --sidebar-ring: #b45309;
+
+  /* Accent reserved for the one action that sends, plus identity marks. */
+  --brand: #b45309;
+  --brand-foreground: #ffffff;
+  /* Chat surfaces are their own tokens: the user bubble is deliberately NOT
+     --primary, so button styling and bubble styling can move independently. */
+  --chat-user: #16181d;
+  --chat-user-foreground: #fafaf7;
+  --chat-ai: #ffffff;
+  --chat-ai-foreground: #16181d;
+}
+
+.dark {
+  --background: #0d1117;
+  --foreground: #e6edf3;
+  --card: #161b22;
+  --card-foreground: #e6edf3;
+  --popover: #161b22;
+  --popover-foreground: #e6edf3;
+  --primary: #e6edf3;
+  --primary-foreground: #0d1117;
+  --secondary: #1f2630;
+  --secondary-foreground: #e6edf3;
+  --muted: #161b22;
+  --muted-foreground: #8b949e;
+  --accent: #1c2129;
+  --accent-foreground: #e6edf3;
+  --destructive: #f85149;
+  --border: #21262d;
+  --input: #21262d;
+  --ring: #e3a008;
+  --chart-1: #e3a008;
+  --chart-2: #8b949e;
+  --chart-3: #e6edf3;
+  --chart-4: #b98a2f;
+  --chart-5: #4d5866;
+  --sidebar: #0a0e13;
+  --sidebar-foreground: #e6edf3;
+  --sidebar-primary: #e3a008;
+  --sidebar-primary-foreground: #0d1117;
+  --sidebar-accent: #1c2129;
+  --sidebar-accent-foreground: #e6edf3;
+  --sidebar-border: #21262d;
+  --sidebar-ring: #e3a008;
+
+  --brand: #e3a008;
+  --brand-foreground: #0d1117;
+  --chat-user: #1f2630;
+  --chat-user-foreground: #e6edf3;
+  --chat-ai: #161b22;
+  --chat-ai-foreground: #e6edf3;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Tailwind Typography sets its own text-color variables (meant for
+   independent article pages), which fight a chat bubble's own foreground
+   color — e.g. the user bubble's white-on-dark text rendering as
+   near-invisible gray. Make prose content inherit the bubble's color instead
+   and keep only the spacing/list/code-block styling. */
+.prose-chat {
+  --tw-prose-body: inherit;
+  --tw-prose-headings: inherit;
+  --tw-prose-bold: inherit;
+  --tw-prose-links: inherit;
+  --tw-prose-quotes: inherit;
+  --tw-prose-bullets: inherit;
+  --tw-prose-counters: inherit;
+  --tw-prose-invert-body: inherit;
+  --tw-prose-invert-headings: inherit;
+  --tw-prose-invert-bold: inherit;
+  --tw-prose-invert-links: inherit;
+  --tw-prose-invert-quotes: inherit;
+  --tw-prose-invert-bullets: inherit;
+  --tw-prose-invert-counters: inherit;
 }

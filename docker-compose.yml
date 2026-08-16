@@ -1,0 +1,46 @@
+services:
+  ner-ai:
+    build: .
+    container_name: ner-ai
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    ports:
+      # Bound to loopback: the app is reached through Caddy (see
+      # Caddyfile.example), never directly from the internet. Publishing
+      # "3000:3000" instead would expose it on every interface and let people
+      # bypass TLS by hitting the server's IP on port 3000.
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ner-ai-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: ner-ai-postgres
+    restart: unless-stopped
+    # Reads POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB from the same file
+    # as the app. (Compose's ${VAR} substitution only auto-loads a file named
+    # ".env", so keeping everything in .env.docker avoids splitting the
+    # database password across two files and letting them drift apart.)
+    env_file:
+      - .env.docker
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # User/db names are fixed by convention; only the password is a secret.
+      test: ["CMD-SHELL", "pg_isready -U ner_ai -d ner_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ner-ai-net
+
+volumes:
+  pgdata:
+
+networks:
+  ner-ai-net:
+    driver: bridge

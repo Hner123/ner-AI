@@ -30,8 +30,15 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — real ones hold the gateway key, auth secret and DB password.
+# The *.example templates carry no secrets and are meant to be committed.
 .env*
+!.env.example
+!.env.docker.example
+
+# local agent/editor state (lock files, per-machine settings)
+.claude/
+.windsurf/
 
 # vercel
 .vercel
@@ -39,3 +46,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
