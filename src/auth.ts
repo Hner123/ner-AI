@@ -12,6 +12,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        rememberMe: { label: "Keep me signed in", type: "text" },
       },
       authorize: async (credentials) => {
         const email = credentials?.email;
@@ -28,7 +29,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
 
-        return { id: user.id, email: user.email, name: user.name, isAdmin: user.isAdmin };
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          isAdmin: user.isAdmin,
+          // Credentials arrive as strings from the form post.
+          rememberMe: credentials?.rememberMe === "true",
+        };
       },
     }),
   ],

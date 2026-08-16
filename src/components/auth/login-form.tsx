@@ -14,13 +14,21 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Defaults on so this doesn't change how sessions already behave; unticking
+  // it is the deliberate "I'm on a shared machine" choice.
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await signIn("credentials", { email, password, redirect: false });
+      const res = await signIn("credentials", {
+        email,
+        password,
+        rememberMe: String(rememberMe),
+        redirect: false,
+      });
       if (res?.error) {
         toast.error("Invalid email or password");
         return;
@@ -56,6 +64,16 @@ export function LoginForm() {
           onChange={(e) => setPassword(e.target.value)}
         />
       </div>
+      <label className="flex cursor-pointer items-center gap-2 text-sm select-none">
+        <input
+          type="checkbox"
+          id="rememberMe"
+          checked={rememberMe}
+          onChange={(e) => setRememberMe(e.target.checked)}
+          className="accent-brand size-4"
+        />
+        Keep me signed in
+      </label>
       <Button type="submit" disabled={loading}>
         {loading ? "Signing in…" : "Sign in"}
       </Button>

@@ -95,6 +95,19 @@ would keep their access until the token expired. Non-admins get a 404 on
 `/admin` and a 403 from `/api/admin/*`. Admins can't delete or demote
 themselves (that could leave the instance with no admin at all).
 
+## Sessions
+
+The login form's **"Keep me signed in"** controls how long a session lasts:
+ticked (the default) gives 30 days, unticked gives 12 hours.
+
+Auth.js takes `session.maxAge` from static config, so the cookie itself always
+carries the 30-day lifetime and the short case can't be expressed there.
+Instead the token records an absolute `expiresAt` at sign-in, and the `jwt`
+callback in [src/auth.config.ts](src/auth.config.ts) returns `null` once that
+passes — which drops the session even though the cookie is still in the
+browser. The check runs in the proxy too, so an expired session can't reach a
+protected page.
+
 ## Creating accounts
 
 Admins can add users from `/admin`. To create the *first* admin — or to
