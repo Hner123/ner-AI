@@ -51,7 +51,7 @@ export function MobileNav({
           />
         </SheetContent>
       </Sheet>
-      <span className="font-mono text-sm font-medium">NerKyot</span>
+      <span className="font-ui text-sm font-medium">NerKyot</span>
     </div>
   );
 }

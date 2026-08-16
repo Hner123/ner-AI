@@ -93,7 +93,7 @@ export function ChatWindow({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <header className="flex items-center justify-between gap-3 border-b p-3">
-        <h1 className="min-w-0 truncate font-mono text-[13px] font-medium">{title}</h1>
+        <h1 className="min-w-0 truncate font-ui text-[13px] font-medium">{title}</h1>
         <ModelPicker
           models={allowedModels}
           value={currentModel}

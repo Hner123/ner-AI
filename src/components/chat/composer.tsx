@@ -191,7 +191,7 @@ export function Composer({
                 className="group border-border bg-muted/50 relative flex items-center gap-2 rounded-lg border px-2.5 py-2"
               >
                 <FileTextIcon className="text-muted-foreground size-4 shrink-0" />
-                <div className="min-w-0 font-mono">
+                <div className="min-w-0 font-ui">
                   <div className="max-w-40 truncate text-xs font-medium">{a.filename}</div>
                   <div className="text-muted-foreground text-[11px] tabular-nums">
                     {a.status === "reading" ? "Reading…" : a.doc ? formatChars(a.doc.chars) : ""}
@@ -239,7 +239,7 @@ export function Composer({
           placeholder={placeholder}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          className="placeholder:font-mono max-h-48 min-h-10 flex-1 resize-none border-0 bg-transparent px-2 py-1.5 shadow-none focus-visible:ring-0"
+          className="placeholder:font-ui max-h-48 min-h-10 flex-1 resize-none border-0 bg-transparent px-2 py-1.5 shadow-none focus-visible:ring-0"
         />
         {streaming ? (
           <Button type="button" size="icon" variant="secondary" onClick={onStop} className="rounded-sm">

@@ -17,15 +17,15 @@ export default async function AdminPage() {
     <main className="mx-auto w-full max-w-4xl flex-1 overflow-y-auto p-4 sm:p-6">
       <div className="mb-6 space-y-3">
         <Link
-          href="/chat"
-          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 font-mono text-xs"
+          href="/settings"
+          className="text-muted-foreground hover:text-foreground font-ui inline-flex items-center gap-1.5 text-xs"
         >
           <ArrowLeftIcon className="size-4" />
-          Back to chat
+          Back to settings
         </Link>
         <div>
-          <h1 className="font-mono text-2xl font-medium tracking-tight">Settings</h1>
-          <p className="text-muted-foreground font-mono text-xs">Signed in as {admin.email}</p>
+          <h1 className="font-ui text-2xl font-medium tracking-tight">Users</h1>
+          <p className="text-muted-foreground font-data text-xs">Signed in as {admin.email}</p>
         </div>
       </div>
 

@@ -8,10 +8,16 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  /* Interface chrome (nav, labels, controls) is monospace; message text is not. */
-  --font-heading: var(--font-mono);
+  /* Three type roles, remapped by whichever design direction is active:
+     ui   = interface chrome (nav, labels, controls)
+     body = message text
+     data = figures and identifiers (token counts, model ids) */
+  --font-ui: var(--f-ui);
+  --font-body: var(--f-body);
+  --font-data: var(--f-data);
+  --font-sans: var(--f-body);
+  --font-mono: var(--f-data);
+  --font-heading: var(--f-ui);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-chat-user: var(--chat-user);
@@ -57,12 +63,27 @@
 }
 
 /* ============================================================
-   "Console" direction — terminal heritage.
-   Warm-neutral paper in light, GitHub-dark-adjacent ground in dark, amber
-   as the single accent. Corners stay tight (6px) so nothing reads soft.
+   Design directions.
+
+   Each one owns a palette, a set of type roles and a corner radius. The
+   active direction is an attribute on <html> (data-design), set before paint
+   by the inline script in layout.tsx so there's no flash of the wrong look.
+
+   Selector weights matter here: `.dark` and `[data-design="x"]` have equal
+   specificity, so every direction needs its own `.dark[data-design="x"]`
+   block (weight 0,2,0) or a light palette would win in dark mode. The bare
+   `:root` / `.dark` blocks are Console, which is also the fallback when the
+   attribute is missing (JS disabled).
    ============================================================ */
 
-:root {
+/* ---------- Console — terminal heritage ---------- */
+:root,
+[data-design="console"] {
+  --f-ui: "IBM Plex Mono", ui-monospace, monospace;
+  --f-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-data: "IBM Plex Mono", ui-monospace, monospace;
+  --radius: 0.375rem;
+
   --background: #fafaf7;
   --foreground: #16181d;
   --card: #ffffff;
@@ -81,12 +102,6 @@
   --border: #e1e1d7;
   --input: #e1e1d7;
   --ring: #b45309;
-  --chart-1: #b45309;
-  --chart-2: #5c6370;
-  --chart-3: #16181d;
-  --chart-4: #8a6a3b;
-  --chart-5: #a3a396;
-  --radius: 0.375rem;
   --sidebar: #f1f1ea;
   --sidebar-foreground: #16181d;
   --sidebar-primary: #16181d;
@@ -95,19 +110,16 @@
   --sidebar-accent-foreground: #16181d;
   --sidebar-border: #e1e1d7;
   --sidebar-ring: #b45309;
-
-  /* Accent reserved for the one action that sends, plus identity marks. */
   --brand: #b45309;
   --brand-foreground: #ffffff;
-  /* Chat surfaces are their own tokens: the user bubble is deliberately NOT
-     --primary, so button styling and bubble styling can move independently. */
   --chat-user: #16181d;
   --chat-user-foreground: #fafaf7;
   --chat-ai: #ffffff;
   --chat-ai-foreground: #16181d;
 }
 
-.dark {
+.dark,
+.dark[data-design="console"] {
   --background: #0d1117;
   --foreground: #e6edf3;
   --card: #161b22;
@@ -126,11 +138,6 @@
   --border: #21262d;
   --input: #21262d;
   --ring: #e3a008;
-  --chart-1: #e3a008;
-  --chart-2: #8b949e;
-  --chart-3: #e6edf3;
-  --chart-4: #b98a2f;
-  --chart-5: #4d5866;
   --sidebar: #0a0e13;
   --sidebar-foreground: #e6edf3;
   --sidebar-primary: #e3a008;
@@ -139,7 +146,6 @@
   --sidebar-accent-foreground: #e6edf3;
   --sidebar-border: #21262d;
   --sidebar-ring: #e3a008;
-
   --brand: #e3a008;
   --brand-foreground: #0d1117;
   --chat-user: #1f2630;
@@ -148,6 +154,233 @@
   --chat-ai-foreground: #e6edf3;
 }
 
+/* ---------- Reader — replies as prose ---------- */
+[data-design="reader"] {
+  --f-ui: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --f-body: "Newsreader", ui-serif, Georgia, serif;
+  --f-data: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+  --radius: 0.625rem;
+
+  --background: #f8f9f7;
+  --foreground: #1a1f1c;
+  --card: #ffffff;
+  --card-foreground: #1a1f1c;
+  --popover: #ffffff;
+  --popover-foreground: #1a1f1c;
+  --primary: #2f5d50;
+  --primary-foreground: #f4f8f5;
+  --secondary: #eaefe9;
+  --secondary-foreground: #1a1f1c;
+  --muted: #f1f3ef;
+  --muted-foreground: #5f6b64;
+  --accent: #e6ebe4;
+  --accent-foreground: #1a1f1c;
+  --destructive: #a83232;
+  --border: #e1e6e0;
+  --input: #e1e6e0;
+  --ring: #2f5d50;
+  --sidebar: #f1f3ef;
+  --sidebar-foreground: #1a1f1c;
+  --sidebar-primary: #2f5d50;
+  --sidebar-primary-foreground: #f4f8f5;
+  --sidebar-accent: #e6ebe4;
+  --sidebar-accent-foreground: #1a1f1c;
+  --sidebar-border: #e1e6e0;
+  --sidebar-ring: #2f5d50;
+  --brand: #2f5d50;
+  --brand-foreground: #ffffff;
+  --chat-user: #2f5d50;
+  --chat-user-foreground: #f4f8f5;
+  --chat-ai: #ffffff;
+  --chat-ai-foreground: #1a1f1c;
+}
+
+.dark[data-design="reader"] {
+  --background: #121613;
+  --foreground: #e8ede9;
+  --card: #1a201c;
+  --card-foreground: #e8ede9;
+  --popover: #1a201c;
+  --popover-foreground: #e8ede9;
+  --primary: #7fb89f;
+  --primary-foreground: #0e1210;
+  --secondary: #222a25;
+  --secondary-foreground: #e8ede9;
+  --muted: #1a201c;
+  --muted-foreground: #98a69e;
+  --accent: #1f2622;
+  --accent-foreground: #e8ede9;
+  --destructive: #e2726b;
+  --border: #262e29;
+  --input: #262e29;
+  --ring: #7fb89f;
+  --sidebar: #0e1210;
+  --sidebar-foreground: #e8ede9;
+  --sidebar-primary: #7fb89f;
+  --sidebar-primary-foreground: #0e1210;
+  --sidebar-accent: #1f2622;
+  --sidebar-accent-foreground: #e8ede9;
+  --sidebar-border: #262e29;
+  --sidebar-ring: #7fb89f;
+  --brand: #7fb89f;
+  --brand-foreground: #0e1210;
+  --chat-user: #294a3f;
+  --chat-user-foreground: #eaf3ee;
+  --chat-ai: #1a201c;
+  --chat-ai-foreground: #e8ede9;
+}
+
+/* ---------- Precision — Swiss utility ---------- */
+[data-design="precision"] {
+  --f-ui: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --f-body: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --f-data: "JetBrains Mono", ui-monospace, monospace;
+  --radius: 0.125rem;
+
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #fafafa;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f4f4f5;
+  --muted-foreground: #6e6e73;
+  --accent: #e9e9eb;
+  --accent-foreground: #0a0a0a;
+  --destructive: #d62828;
+  --border: #dedee0;
+  --input: #dedee0;
+  --ring: #d62828;
+  --sidebar: #f4f4f5;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #0a0a0a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e9e9eb;
+  --sidebar-accent-foreground: #0a0a0a;
+  --sidebar-border: #dedee0;
+  --sidebar-ring: #d62828;
+  --brand: #d62828;
+  --brand-foreground: #ffffff;
+  --chat-user: #0a0a0a;
+  --chat-user-foreground: #ffffff;
+  --chat-ai: #fafafa;
+  --chat-ai-foreground: #0a0a0a;
+}
+
+.dark[data-design="precision"] {
+  --background: #0b0b0c;
+  --foreground: #f2f2f3;
+  --card: #171719;
+  --card-foreground: #f2f2f3;
+  --popover: #171719;
+  --popover-foreground: #f2f2f3;
+  --primary: #f2f2f3;
+  --primary-foreground: #0b0b0c;
+  --secondary: #232326;
+  --secondary-foreground: #f2f2f3;
+  --muted: #171719;
+  --muted-foreground: #9a9aa0;
+  --accent: #1d1d20;
+  --accent-foreground: #f2f2f3;
+  --destructive: #ff4d4d;
+  --border: #232326;
+  --input: #232326;
+  --ring: #ff4d4d;
+  --sidebar: #121214;
+  --sidebar-foreground: #f2f2f3;
+  --sidebar-primary: #ff4d4d;
+  --sidebar-primary-foreground: #0b0b0c;
+  --sidebar-accent: #1d1d20;
+  --sidebar-accent-foreground: #f2f2f3;
+  --sidebar-border: #232326;
+  --sidebar-ring: #ff4d4d;
+  --brand: #ff4d4d;
+  --brand-foreground: #0b0b0c;
+  --chat-user: #232326;
+  --chat-user-foreground: #f2f2f3;
+  --chat-ai: #171719;
+  --chat-ai-foreground: #f2f2f3;
+}
+
+/* ---------- Cushion — soft product ---------- */
+[data-design="cushion"] {
+  --f-ui: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --f-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --f-data: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --radius: 1.125rem;
+
+  --background: #f4f6f8;
+  --foreground: #1b2430;
+  --card: #ffffff;
+  --card-foreground: #1b2430;
+  --popover: #ffffff;
+  --popover-foreground: #1b2430;
+  --primary: #2e8b84;
+  --primary-foreground: #ffffff;
+  --secondary: #e6edf2;
+  --secondary-foreground: #1b2430;
+  --muted: #edf1f4;
+  --muted-foreground: #6b7a8c;
+  --accent: #e3eaf0;
+  --accent-foreground: #1b2430;
+  --destructive: #c0453f;
+  --border: #e1e8ed;
+  --input: #e1e8ed;
+  --ring: #2e8b84;
+  --sidebar: #edf1f4;
+  --sidebar-foreground: #1b2430;
+  --sidebar-primary: #2e8b84;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e3eaf0;
+  --sidebar-accent-foreground: #1b2430;
+  --sidebar-border: #e1e8ed;
+  --sidebar-ring: #2e8b84;
+  --brand: #2e8b84;
+  --brand-foreground: #ffffff;
+  --chat-user: #2e8b84;
+  --chat-user-foreground: #ffffff;
+  --chat-ai: #ffffff;
+  --chat-ai-foreground: #1b2430;
+}
+
+.dark[data-design="cushion"] {
+  --background: #101820;
+  --foreground: #e8eff5;
+  --card: #1c2733;
+  --card-foreground: #e8eff5;
+  --popover: #1c2733;
+  --popover-foreground: #e8eff5;
+  --primary: #5fbfb4;
+  --primary-foreground: #0f1720;
+  --secondary: #23303d;
+  --secondary-foreground: #e8eff5;
+  --muted: #1c2733;
+  --muted-foreground: #93a4b5;
+  --accent: #1e2a36;
+  --accent-foreground: #e8eff5;
+  --destructive: #ef7a72;
+  --border: #26333f;
+  --input: #26333f;
+  --ring: #5fbfb4;
+  --sidebar: #16202b;
+  --sidebar-foreground: #e8eff5;
+  --sidebar-primary: #5fbfb4;
+  --sidebar-primary-foreground: #0f1720;
+  --sidebar-accent: #1e2a36;
+  --sidebar-accent-foreground: #e8eff5;
+  --sidebar-border: #26333f;
+  --sidebar-ring: #5fbfb4;
+  --brand: #5fbfb4;
+  --brand-foreground: #0f1720;
+  --chat-user: #2a5f5a;
+  --chat-user-foreground: #eaf6f4;
+  --chat-ai: #1c2733;
+  --chat-ai-foreground: #e8eff5;
+}
 @layer base {
   * {
     @apply border-border outline-ring/50;

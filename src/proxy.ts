@@ -21,6 +21,7 @@ export const config = {
   // page itself via getAdmin(), which re-reads the flag from the database.
   matcher: [
     "/chat/:path*",
+    "/settings/:path*",
     "/admin/:path*",
     "/api/chat/:path*",
     "/api/conversations/:path*",

@@ -26,12 +26,12 @@ export function ModelPicker({
       onValueChange={(next) => next && onChange(next)}
       disabled={disabled}
     >
-      <SelectTrigger className="w-36 shrink-0 font-mono text-xs sm:w-56" size="sm">
+      <SelectTrigger className="w-36 shrink-0 font-ui text-xs sm:w-56" size="sm">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
         {models.map((m) => (
-          <SelectItem key={m} value={m} className="font-mono text-xs">
+          <SelectItem key={m} value={m} className="font-data text-xs">
             {formatModelLabel(m)}
           </SelectItem>
         ))}

@@ -19,19 +19,38 @@ Browser
 
 ## Design
 
-The **"Console"** direction: terminal heritage. IBM Plex Mono carries the
-interface chrome (sidebar, headers, model ids, table labels, token counts)
-while IBM Plex Sans sets message text so long answers stay readable. Amber is
-the single accent, reserved for the send button, the user avatar and the admin
-badge; corners stay at 6px so nothing reads soft. Model ids show verbatim
-(`gpt-5.6-terra`) — the same string you put in `ALLOWED_MODELS`.
+Four interchangeable looks, switchable at **Settings → Appearance** by any
+signed-in user (it's a per-browser preference, stored in `localStorage`):
 
-Both fonts are **self-hosted** via `@fontsource` (imported in
-[src/app/layout.tsx](src/app/layout.tsx)) — no Google CDN request, and they
-work offline in Docker. The whole palette lives in `:root` / `.dark` in
-[src/app/globals.css](src/app/globals.css); chat surfaces have their own
-`--chat-user` / `--chat-ai` / `--brand` tokens so bubble styling and button
-styling can move independently.
+| Direction | Typography | Character |
+|---|---|---|
+| **Console** | IBM Plex Mono + Plex Sans | Terminal heritage, amber, 6px corners |
+| **Reader** | Newsreader + Public Sans | Serif replies, forest green |
+| **Precision** | Archivo + JetBrains Mono | Swiss, 2px corners, signal red |
+| **Cushion** | Manrope | Soft, 18px corners, muted teal |
+
+Each direction is a block of CSS variables in
+[globals.css](src/app/globals.css) keyed on `[data-design="…"]`, covering
+palette, three type roles (`--f-ui` chrome / `--f-body` messages / `--f-data`
+figures) and `--radius`. Components never name a typeface — they use
+`font-ui` / `font-body` / `font-data`, so a direction remaps all of them at
+once. Two details worth knowing before editing:
+
+- **Every direction needs its own `.dark[data-design="x"]` block.** `.dark` and
+  `[data-design="x"]` have equal specificity, so without the combined selector
+  a light palette wins in dark mode.
+- **The choice is applied by a pre-paint script** in
+  [layout.tsx](src/app/layout.tsx), otherwise the page flashes the default
+  direction before hydration.
+
+All seven typefaces are self-hosted, but a browser only downloads the files it
+actually renders — the inactive directions cost a few KB of CSS and nothing
+more.
+
+Console is the default. Model ids show verbatim (`gpt-5.6-terra`) — the same
+string you put in `ALLOWED_MODELS`. Chat surfaces have their own
+`--chat-user` / `--chat-ai` / `--brand` tokens rather than reusing `--primary`,
+so bubble styling and button styling move independently.
 
 ## Stack
 

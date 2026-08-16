@@ -125,7 +125,7 @@ export function SidebarContent({
           onClick={newChat}
           disabled={creating}
           variant="outline"
-          className="w-full justify-start gap-2 font-mono"
+          className="w-full justify-start gap-2 font-ui"
         >
           <PlusIcon className="size-4" />
           New chat
@@ -154,13 +154,13 @@ export function SidebarContent({
                       if (e.key === "Enter") saveRename(c.id);
                       if (e.key === "Escape") setEditingId(null);
                     }}
-                    className="w-full bg-transparent px-2 py-1.5 font-mono text-[13px] outline-none"
+                    className="w-full bg-transparent px-2 py-1.5 font-ui text-[13px] outline-none"
                   />
                 ) : (
                   <Link
                     href={`/chat/${c.id}`}
                     onClick={onNavigate}
-                    className="min-w-0 flex-1 truncate px-2 py-1.5 font-mono text-[13px]"
+                    className="min-w-0 flex-1 truncate px-2 py-1.5 font-ui text-[13px]"
                   >
                     {c.title}
                   </Link>
@@ -195,23 +195,23 @@ export function SidebarContent({
       </ScrollArea>
 
       <div className="border-sidebar-border flex items-center gap-2 border-t p-3">
-        {user.isAdmin && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="Settings"
-            render={<Link href="/admin" onClick={onNavigate} />}
-          >
-            <SettingsIcon className="size-4" />
-          </Button>
-        )}
+        {/* Everyone gets Settings — it holds the appearance choice. Admins
+            reach user management from there. */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Settings"
+          render={<Link href="/settings" onClick={onNavigate} />}
+        >
+          <SettingsIcon className="size-4" />
+        </Button>
         <Avatar size="sm">
-          <AvatarFallback className="bg-brand text-brand-foreground font-mono text-xs font-semibold">
+          <AvatarFallback className="bg-brand text-brand-foreground font-ui text-xs font-semibold">
             {(user.name ?? user.email ?? "?").slice(0, 1).toUpperCase()}
           </AvatarFallback>
         </Avatar>
-        <p className="min-w-0 flex-1 truncate font-mono text-[13px] font-medium">
+        <p className="min-w-0 flex-1 truncate font-ui text-[13px] font-medium">
           {user.name ?? user.email}
         </p>
         <ThemeToggle />

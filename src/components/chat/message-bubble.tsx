@@ -65,7 +65,7 @@ export function MessageBubble({ message }: { message: ChatUIMessage }) {
                 )}
               >
                 <FileTextIcon className="size-4 shrink-0 opacity-70" />
-                <div className="min-w-0 font-mono">
+                <div className="min-w-0 font-ui">
                   <div className="max-w-48 truncate text-xs font-medium">{doc.filename}</div>
                   <div className="text-[11px] tabular-nums opacity-70">
                     {doc.truncated ? "truncated · " : ""}

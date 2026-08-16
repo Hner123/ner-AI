@@ -73,11 +73,11 @@ export function UserManager({
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="font-mono text-sm font-medium tracking-wide uppercase">Users</h2>
+          <h2 className="font-ui text-sm font-medium tracking-wide uppercase">Users</h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            <span className="font-mono tabular-nums">{users.length}</span> account
+            <span className="font-data tabular-nums">{users.length}</span> account
             {users.length === 1 ? "" : "s"} ·{" "}
-            <span className="font-mono tabular-nums">
+            <span className="font-data tabular-nums">
               {nf.format(users.reduce((sum, u) => sum + u.tokensUsed, 0))}
             </span>{" "}
             tokens used in total · everyone shares the same gateway key
@@ -94,7 +94,7 @@ export function UserManager({
           rather than forcing the whole page to scroll. */}
       <div className="overflow-x-auto rounded-md border">
         <table className="w-full min-w-[640px] text-sm">
-          <thead className="bg-muted/50 text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
+          <thead className="bg-muted/50 text-muted-foreground font-ui text-[11px] tracking-wider uppercase">
             <tr>
               <th className="px-4 py-2.5 text-left font-medium">User</th>
               <th className="px-4 py-2.5 text-left font-medium">Role</th>
@@ -118,7 +118,7 @@ export function UserManager({
                           {u.name ?? u.email}
                           {isSelf && <span className="text-muted-foreground font-normal"> (you)</span>}
                         </div>
-                        <div className="text-muted-foreground truncate font-mono text-xs">
+                        <div className="text-muted-foreground truncate font-data text-xs">
                           {u.email}
                         </div>
                       </div>
@@ -126,24 +126,24 @@ export function UserManager({
                   </td>
                   <td className="px-4 py-3">
                     {u.isAdmin ? (
-                      <span className="bg-brand/15 text-brand inline-flex items-center gap-1 rounded-sm px-2 py-0.5 font-mono text-[11px] font-medium tracking-wide uppercase">
+                      <span className="bg-brand/15 text-brand inline-flex items-center gap-1 rounded-sm px-2 py-0.5 font-ui text-[11px] font-medium tracking-wide uppercase">
                         <ShieldIcon className="size-3" />
                         Admin
                       </span>
                     ) : (
-                      <span className="text-muted-foreground font-mono text-[11px] tracking-wide uppercase">
+                      <span className="text-muted-foreground font-ui text-[11px] tracking-wide uppercase">
                         Member
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right font-mono text-[13px] tabular-nums">
+                  <td className="px-4 py-3 text-right font-data text-[13px] tabular-nums">
                     {u.tokensUsed > 0 ? (
                       nf.format(u.tokensUsed)
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
                   </td>
-                  <td className="text-muted-foreground px-4 py-3 text-right font-mono text-xs tabular-nums">
+                  <td className="text-muted-foreground px-4 py-3 text-right font-data text-xs tabular-nums">
                     {u.conversationCount}
                   </td>
                   <td className="px-4 py-3">

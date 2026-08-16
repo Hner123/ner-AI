@@ -49,7 +49,7 @@ export function EmptyState({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center gap-6 p-6">
-      <h1 className="font-mono text-2xl font-medium tracking-tight">What can I help with?</h1>
+      <h1 className="font-ui text-2xl font-medium tracking-tight">What can I help with?</h1>
       <div className="w-full space-y-3">
         <div className="flex justify-center">
           <ModelPicker models={allowedModels} value={model} onChange={setModel} />
