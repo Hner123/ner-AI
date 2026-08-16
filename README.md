@@ -94,6 +94,16 @@ Without a real `GDS_GATEWAY_URL`/`GDS_GATEWAY_KEY`, everything works except
 actual model replies (accounts, conversations, sidebar, rename/delete) — a
 failed chat request surfaces as a toast instead of a crash.
 
+## Settings
+
+**`/settings`** is open to every signed-in user and holds the two personal
+things: **your own token usage** (total, last 7 days, requests, chats, and a
+breakdown by model) and **Appearance**. Admins additionally get a link through
+to user management.
+
+Usage is read per-user from `UsageEvent`, so someone only ever sees their own
+figures — the shared-key totals for everyone stay in the admin view.
+
 ## Admin settings
 
 Admins get a gear icon in the sidebar linking to **`/admin`**, where they can

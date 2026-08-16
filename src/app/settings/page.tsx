@@ -4,15 +4,17 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { DesignPicker } from "@/components/design-picker";
+import { UsageSummary } from "@/components/usage-summary";
 import { Button } from "@/components/ui/button";
 import { getAdmin } from "@/lib/admin";
+import { getUserUsage } from "@/lib/usage";
 
-/** Open to every signed-in user: appearance is a personal preference. */
+/** Open to every signed-in user: appearance and your own usage are personal. */
 export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const admin = await getAdmin();
+  const [admin, usage] = await Promise.all([getAdmin(), getUserUsage(session.user.id)]);
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 overflow-y-auto p-4 sm:p-6">
@@ -32,7 +34,10 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      <DesignPicker />
+      <div className="space-y-8">
+        <UsageSummary usage={usage} />
+        <DesignPicker />
+      </div>
 
       {admin && (
         <div className="mt-8 border-t pt-6">
