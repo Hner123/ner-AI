@@ -71,7 +71,7 @@ export function UserManager({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-mono text-sm font-medium tracking-wide uppercase">Users</h2>
           <p className="text-muted-foreground mt-1 text-sm">
@@ -83,14 +83,17 @@ export function UserManager({
             tokens used in total · everyone shares the same gateway key
           </p>
         </div>
-        <Button onClick={() => setAddOpen(true)} className="gap-1.5">
+        <Button onClick={() => setAddOpen(true)} className="w-full gap-1.5 sm:w-auto">
           <PlusIcon className="size-4" />
           Add user
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-md border">
-        <table className="w-full text-sm">
+      {/* The table can't compress below ~640px without the action buttons
+          colliding, so on a phone it scrolls sideways inside its own box
+          rather than forcing the whole page to scroll. */}
+      <div className="overflow-x-auto rounded-md border">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-muted/50 text-muted-foreground font-mono text-[11px] tracking-wider uppercase">
             <tr>
               <th className="px-4 py-2.5 text-left font-medium">User</th>

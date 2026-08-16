@@ -19,16 +19,30 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
-type ConversationSummary = { id: string; title: string; model: string; updatedAt: string };
+export type ConversationSummary = {
+  id: string;
+  title: string;
+  model: string;
+  updatedAt: string;
+};
 
-export function Sidebar({
+export type SidebarUser = { name: string | null; email: string | null; isAdmin: boolean };
+
+/**
+ * The sidebar's contents, without the surrounding column. Rendered twice: as a
+ * fixed column on desktop, and inside a drawer on mobile (see mobile-nav.tsx).
+ * `onNavigate` lets the drawer close itself when a link is followed.
+ */
+export function SidebarContent({
   initialConversations,
   defaultModel,
   user,
+  onNavigate,
 }: {
   initialConversations: ConversationSummary[];
   defaultModel: string;
-  user: { name: string | null; email: string | null; isAdmin: boolean };
+  user: SidebarUser;
+  onNavigate?: () => void;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -64,6 +78,7 @@ export function Sidebar({
       setConversations((prev) => [conversation, ...prev]);
       router.push(`/chat/${conversation.id}`);
       router.refresh();
+      onNavigate?.();
     } finally {
       setCreating(false);
     }
@@ -104,7 +119,7 @@ export function Sidebar({
   }
 
   return (
-    <aside className="bg-sidebar text-sidebar-foreground border-sidebar-border flex w-64 shrink-0 flex-col border-r">
+    <>
       <div className="p-3">
         <Button
           onClick={newChat}
@@ -144,6 +159,7 @@ export function Sidebar({
                 ) : (
                   <Link
                     href={`/chat/${c.id}`}
+                    onClick={onNavigate}
                     className="min-w-0 flex-1 truncate px-2 py-1.5 font-mono text-[13px]"
                   >
                     {c.title}
@@ -155,7 +171,11 @@ export function Sidebar({
                       <Button
                         variant="ghost"
                         size="icon-sm"
-                        className="mr-1 shrink-0 opacity-0 group-hover:opacity-100"
+                        aria-label={`Options for ${c.title}`}
+                        // Always visible on touch screens — there is no hover
+                        // there, so hiding it would make rename/delete
+                        // unreachable on a phone.
+                        className="mr-1 shrink-0 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
                       >
                         <MoreHorizontalIcon className="size-3.5" />
                       </Button>
@@ -181,7 +201,7 @@ export function Sidebar({
             variant="ghost"
             size="icon"
             aria-label="Settings"
-            render={<Link href="/admin" />}
+            render={<Link href="/admin" onClick={onNavigate} />}
           >
             <SettingsIcon className="size-4" />
           </Button>
@@ -205,6 +225,19 @@ export function Sidebar({
           <LogOutIcon className="size-4" />
         </Button>
       </div>
+    </>
+  );
+}
+
+/** The desktop sidebar: a fixed column, hidden below the md breakpoint. */
+export function Sidebar(props: {
+  initialConversations: ConversationSummary[];
+  defaultModel: string;
+  user: SidebarUser;
+}) {
+  return (
+    <aside className="bg-sidebar text-sidebar-foreground border-sidebar-border hidden w-64 shrink-0 flex-col border-r md:flex">
+      <SidebarContent {...props} />
     </aside>
   );
 }

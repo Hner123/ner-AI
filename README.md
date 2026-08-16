@@ -184,6 +184,24 @@ prisma/schema.prisma            User / Conversation / Message / UsageEvent
 scripts/create-user.ts          the only way to create an account (npm run create-user)
 ```
 
+## Responsive layout
+
+The `md` breakpoint (768px) is the switch. Above it, the sidebar is a fixed
+256px column. Below it, that column is hidden and
+[mobile-nav.tsx](src/components/chat/mobile-nav.tsx) renders a top bar whose
+menu button opens the same `SidebarContent` in a drawer, closing itself
+whenever a link inside is followed.
+
+Three mobile-specific details worth knowing before changing this:
+
+- **`h-dvh`, not `h-screen`** on `<body>` — a phone's address bar shrinks the
+  viewport, and `100vh` pushes the composer below the fold.
+- **The per-chat "…" menu is always visible below `md`.** It's hover-revealed
+  on desktop, and hover doesn't exist on touch, so hiding it there would make
+  rename and delete unreachable.
+- **Inputs stay at 16px until `md`.** iOS zooms the page when a focused input
+  is smaller than that.
+
 ## Document attachments
 
 The composer also accepts **PDF, Word (.docx), Excel (.xlsx)** and plain-text
@@ -215,6 +233,4 @@ client-side.
 
 Not implemented — flagging since they're natural next steps, not oversights:
 
-- **Mobile-responsive sidebar** (currently a fixed 256px column; no
-  collapsible drawer).
 - **Per-user gateway keys/budgets** (see "How it's wired to the gateway" above).

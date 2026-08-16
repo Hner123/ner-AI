@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { auth } from "@/auth";
+import { MobileNav } from "@/components/chat/mobile-nav";
 import { Sidebar } from "@/components/chat/sidebar";
 import { prisma } from "@/lib/db";
 import { DEFAULT_MODEL } from "@/lib/gateway";
@@ -24,21 +25,26 @@ export default async function ChatLayout({ children }: { children: ReactNode }) 
     }),
   ]);
 
+  const sidebarProps = {
+    initialConversations: conversations.map((c) => ({
+      ...c,
+      updatedAt: c.updatedAt.toISOString(),
+    })),
+    defaultModel: DEFAULT_MODEL,
+    user: {
+      name: session.user.name ?? null,
+      email: session.user.email ?? null,
+      isAdmin: me?.isAdmin ?? false,
+    },
+  };
+
   return (
     <div className="flex min-h-0 flex-1">
-      <Sidebar
-        initialConversations={conversations.map((c) => ({
-          ...c,
-          updatedAt: c.updatedAt.toISOString(),
-        }))}
-        defaultModel={DEFAULT_MODEL}
-        user={{
-          name: session.user.name ?? null,
-          email: session.user.email ?? null,
-          isAdmin: me?.isAdmin ?? false,
-        }}
-      />
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
+      <Sidebar {...sidebarProps} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <MobileNav {...sidebarProps} />
+        {children}
+      </div>
     </div>
   );
 }

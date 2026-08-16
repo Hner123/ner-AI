@@ -14,7 +14,7 @@ export default async function AdminPage() {
   const users = await listUsersWithUsage();
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 overflow-y-auto p-6">
+    <main className="mx-auto w-full max-w-4xl flex-1 overflow-y-auto p-4 sm:p-6">
       <div className="mb-6 space-y-3">
         <Link
           href="/chat"

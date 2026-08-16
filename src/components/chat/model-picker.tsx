@@ -26,7 +26,7 @@ export function ModelPicker({
       onValueChange={(next) => next && onChange(next)}
       disabled={disabled}
     >
-      <SelectTrigger className="w-56 font-mono text-xs" size="sm">
+      <SelectTrigger className="w-36 shrink-0 font-mono text-xs sm:w-56" size="sm">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
