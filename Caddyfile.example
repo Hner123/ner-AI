@@ -23,6 +23,8 @@ chat.heineraboka.site {
     }
 
     # If Caddy runs on the host, the app is on loopback (see docker-compose.yml).
+    # This port must match APP_PORT — the default is 3000, but set APP_PORT in
+    # `.env` if that's already taken on your server, and change it here too.
     reverse_proxy 127.0.0.1:3000 {
         flush_interval -1
     }

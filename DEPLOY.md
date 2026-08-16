@@ -23,8 +23,23 @@ dig +short chat.heineraboka.site   # should print the server IP
 git clone https://github.com/Hner123/ner-AI && cd ner-AI
 ```
 
-Docker must be installed and running on the server, and **port 3000 must be
-free** — check with `sudo lsof -i :3000` (nothing should be listening).
+Docker must be installed and running on the server. The app publishes port
+3000 on loopback by default — check whether that's free:
+
+```bash
+sudo ss -lptn 'sport = :3000'
+```
+
+If something already has it, pick another host port (the app still listens on
+3000 *inside* the container — only the host side moves):
+
+```bash
+echo "APP_PORT=3080" > .env
+```
+
+That file is read by Docker Compose itself, which is why this one value lives
+in `.env` rather than `.env.docker`. Whatever you choose has to match the port
+in your Caddy block.
 
 ## 3. Configure
 

@@ -9,8 +9,14 @@ services:
       # Bound to loopback: the app is reached through Caddy (see
       # Caddyfile.example), never directly from the internet. Publishing
       # "3000:3000" instead would expose it on every interface and let people
-      # bypass TLS by hitting the server's IP on port 3000.
-      - "127.0.0.1:3000:3000"
+      # bypass TLS by hitting the server's IP on that port.
+      #
+      # Only the HOST side is configurable — the app always listens on 3000
+      # inside the container. Set APP_PORT in a `.env` file next to this one
+      # if 3000 is already taken on the host (compose reads ${VAR} from `.env`
+      # specifically, which is why this one value doesn't live in .env.docker).
+      # Whatever you choose must match the port in your Caddy block.
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
     depends_on:
       postgres:
         condition: service_healthy
