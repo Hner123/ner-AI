@@ -66,8 +66,26 @@ URL and produce a confusing authentication failure.
 |---|---|
 | `POSTGRES_PASSWORD` | paste the **same** value into `DATABASE_URL` too |
 | `AUTH_SECRET` | **generate a fresh one** — never reuse the development value |
+| `AUTH_URL` | your public `https://…` address, no trailing slash (see below) |
 | `GDS_GATEWAY_KEY` | a `gds_live_…` key from the gateway dashboard |
 | `ALLOWED_MODELS` | must be a subset of that key's `model_whitelist` |
+
+`AUTH_URL` matters because the container never sees your domain — Caddy
+forwards it a request for `localhost:3000`. Without it, Auth.js builds
+absolute URLs against that, and anything it redirects lands the browser on
+`https://localhost:3000`, which is nothing at all on a phone. Check it with:
+
+```bash
+curl -s https://your-domain/api/auth/csrf -c /tmp/j >/dev/null && \
+curl -s -b /tmp/j -X POST https://your-domain/api/auth/signout \
+  -H 'X-Auth-Return-Redirect: 1' \
+  --data-urlencode "csrfToken=$(curl -s -b /tmp/j https://your-domain/api/auth/csrf | sed -E 's/.*"csrfToken":"([^"]+)".*/\1/')" \
+  --data-urlencode 'callbackUrl=/login'
+```
+
+It should print your own domain. If it prints `localhost:3000`, `AUTH_URL`
+isn't reaching the container — check it's in `.env.docker` and that you
+recreated the container (`docker compose up -d`), not just restarted it.
 
 ## 4. Start it
 

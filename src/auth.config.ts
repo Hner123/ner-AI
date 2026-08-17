@@ -10,7 +10,21 @@ const SHORT_SESSION_MS = 12 * 60 * 60 * 1000;
 // (Prisma, bcrypt) — the Credentials provider that needs them lives only in
 // src/auth.ts, never here, so middleware's session check never pulls them in.
 export const authConfig: NextAuthConfig = {
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: REMEMBERED_MS / 1000,
+    // Don't re-issue the cookie on session reads. By default Auth.js rewrites
+    // it to roll the expiry forward, which makes signing out a race it can
+    // lose: the signout response clears the cookie, and any session read
+    // already in flight (SessionProvider refetches on focus, navigation, tab
+    // sync) answers with a freshly minted token from the copy the browser
+    // still holds — leaving the user quietly signed in.
+    //
+    // Rolling expiry buys nothing here anyway: the jwt callback below stamps
+    // an absolute expiry at sign-in and enforces it, so extending the cookie
+    // wouldn't extend the session.
+    updateAge: REMEMBERED_MS / 1000,
+  },
   pages: { signIn: "/login" },
   // In production Auth.js validates the incoming Host header against a
   // known canonical URL and rejects anything else (UntrustedHost) — fine

@@ -1,6 +1,5 @@
 "use client";
 
-import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOutIcon, MoreHorizontalIcon, PlusIcon, SettingsIcon } from "lucide-react";
@@ -160,6 +159,17 @@ export function SidebarContent({
                   <Link
                     href={`/chat/${c.id}`}
                     onClick={onNavigate}
+                    // Every conversation in this list would otherwise be
+                    // prefetched on hover and on entering the viewport, and
+                    // each of those RSC requests resolves the session — which
+                    // re-issues the session cookie. Reaching for the sign-out
+                    // button sweeps the mouse across these links, so one of
+                    // those responses could land after the signout had cleared
+                    // the cookie and quietly restore the session.
+                    // The cost is a slightly slower first click into a chat;
+                    // it also stops every sidebar render from firing a query
+                    // per conversation.
+                    prefetch={false}
                     className="min-w-0 flex-1 truncate px-2 py-1.5 font-ui text-[13px]"
                   >
                     {c.title}
@@ -215,15 +225,15 @@ export function SidebarContent({
           {user.name ?? user.email}
         </p>
         <ThemeToggle />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="Sign out"
-          onClick={() => signOut({ callbackUrl: "/login" })}
-        >
-          <LogOutIcon className="size-4" />
-        </Button>
+        {/* A real form POST, not an onClick handler: the navigation destroys
+            this page and the RSC prefetches it has in flight before the
+            cookie is cleared, which is what stops a late prefetch response
+            from re-minting the session. See app/logout/route.ts. */}
+        <form action="/logout" method="post">
+          <Button type="submit" variant="ghost" size="icon" aria-label="Sign out">
+            <LogOutIcon className="size-4" />
+          </Button>
+        </form>
       </div>
     </>
   );

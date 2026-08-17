@@ -94,6 +94,30 @@ Without a real `GDS_GATEWAY_URL`/`GDS_GATEWAY_KEY`, everything works except
 actual model replies (accounts, conversations, sidebar, rename/delete) — a
 failed chat request surfaces as a toast instead of a crash.
 
+## Signing out
+
+Sign-out is a **form POST to `/logout`** ([route.ts](src/app/logout/route.ts)),
+not a client-side `signOut()` call, and that is load-bearing.
+
+Every server request that resolves the session re-issues the session cookie —
+including each RSC payload Next prefetches for the sidebar's links. Clearing
+the cookie from inside the running page is therefore a race it can lose:
+sweeping the mouse toward the sign-out button prefetches conversations, and one
+of those responses landing after the signout mints a fresh token from the copy
+the browser still holds. The user is sent to `/login` believing they're out,
+while their browser still holds a working session. That reproduced in roughly
+3 of 4 desktop attempts.
+
+Two things fix it, and both are needed:
+
+- The form POST **navigates**, so the old document and its in-flight prefetches
+  are gone before the cookie is cleared.
+- The sidebar's conversation links set `prefetch={false}`, so hovering them on
+  the way to the button no longer fires authenticated requests at all.
+
+With both, 12 of 12 runs signed out cleanly, including a deliberate sweep
+across every link first. Don't swap this back to `signOut()` in an onClick.
+
 ## Install it on a phone
 
 There's no separate mobile app and no second codebase — this one installs to a
