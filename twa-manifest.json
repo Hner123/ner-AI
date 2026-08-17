@@ -1,0 +1,48 @@
+{
+  "packageId": "site.heineraboka.chat",
+  "host": "chat.heineraboka.site",
+  "name": "NerKyot",
+  "launcherName": "NerKyot",
+  "display": "standalone",
+  "orientation": "any",
+  "themeColor": "#fafaf7",
+  "themeColorDark": "#0d1117",
+  "navigationColor": "#fafaf7",
+  "navigationColorDark": "#0d1117",
+  "navigationDividerColor": "#fafaf7",
+  "navigationDividerColorDark": "#0d1117",
+  "backgroundColor": "#fafaf7",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://chat.heineraboka.site/icon-512.png",
+  "maskableIconUrl": "https://chat.heineraboka.site/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "nerkyot"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "New chat",
+      "shortName": "New chat",
+      "url": "/chat",
+      "chosenIconUrl": "https://chat.heineraboka.site/icon-192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://chat.heineraboka.site/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://chat.heineraboka.site/",
+  "minSdkVersion": 23,
+  "orientationLock": false,
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "appVersion": "1.0.0"
+}

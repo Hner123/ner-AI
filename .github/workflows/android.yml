@@ -1,0 +1,160 @@
+name: Build Android app
+
+# Builds the Trusted Web Activity wrapper around chat.heineraboka.site and
+# uploads the installable APK (plus the Play Store bundle) as artifacts.
+#
+# Runs on GitHub's machines on purpose: an Android SDK plus Gradle caches is
+# 6-8GB, which the deployment machine doesn't have to spare.
+
+on:
+  workflow_dispatch:
+    inputs:
+      versionName:
+        description: "Version shown to users (e.g. 1.0.1)"
+        required: false
+        default: "1.0.0"
+      versionCode:
+        description: "Internal build number — must increase every release"
+        required: false
+        default: "1"
+  push:
+    paths:
+      - "twa-manifest.json"
+      - ".github/workflows/android.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Point Bubblewrap at the runner's JDK and SDK
+        # Without this it tries to download its own copies interactively, which
+        # never completes on CI.
+        run: |
+          mkdir -p "$HOME/.bubblewrap"
+          cat > "$HOME/.bubblewrap/config.json" <<EOF
+          {
+            "jdkPath": "$JAVA_HOME",
+            "androidSdkPath": "$ANDROID_SDK_ROOT"
+          }
+          EOF
+          cat "$HOME/.bubblewrap/config.json"
+
+      - name: Restore or create the signing key
+        id: keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -n "${KEYSTORE_B64:-}" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > android.keystore
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            echo "Using the existing signing key from repository secrets."
+          else
+            # First run: no key exists yet. Generate one and publish it as an
+            # artifact so it can be stored as a secret. EVERY later build must
+            # reuse it — Android refuses to update an app signed with a
+            # different key, so losing it means uninstall/reinstall for
+            # everyone (and a dead listing if it ever reaches the Play Store).
+            echo "No ANDROID_KEYSTORE_BASE64 secret found — generating a new signing key."
+            keytool -genkeypair -v \
+              -keystore android.keystore \
+              -alias nerkyot \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "${KEYSTORE_PASSWORD:-nerkyot}" \
+              -keypass "${KEYSTORE_PASSWORD:-nerkyot}" \
+              -dname "CN=NerKyot, OU=NerKyot, O=NerKyot, L=, ST=, C=PH"
+            base64 -w0 android.keystore > android.keystore.base64
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Read the certificate fingerprint
+        id: fingerprint
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          FP=$(keytool -list -v -keystore android.keystore -alias nerkyot \
+                -storepass "${KEYSTORE_PASSWORD:-nerkyot}" \
+                | grep -E "SHA256:" | head -1 | sed -E 's/.*SHA256: *//' | tr -d ' ')
+          echo "sha256=$FP" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Certificate fingerprint"
+            echo ""
+            echo '```'
+            echo "$FP"
+            echo '```'
+            echo ""
+            echo "Set this as \`ANDROID_CERT_FINGERPRINT\` in the server's \`.env.docker\`,"
+            echo "along with \`ANDROID_PACKAGE_NAME=site.heineraboka.chat\`, then redeploy."
+            echo "Until then the app works but Chrome keeps a URL bar visible."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Apply version inputs
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          node -e "
+            const fs = require('fs');
+            const m = JSON.parse(fs.readFileSync('twa-manifest.json', 'utf8'));
+            m.appVersionName = '${{ inputs.versionName }}';
+            m.appVersion = '${{ inputs.versionName }}';
+            m.appVersionCode = Number('${{ inputs.versionCode }}');
+            fs.writeFileSync('twa-manifest.json', JSON.stringify(m, null, 2));
+          "
+
+      - name: Build the app
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          # --skipPwaValidation: the site requires a login, so the validator
+          # only ever sees the sign-in page and scores it as a failure. The
+          # manifest, icons and service worker are verified separately by the
+          # PWA test suite.
+          bubblewrap build \
+            --skipPwaValidation \
+            --signingKeyPath=./android.keystore \
+            --signingKeyAlias=nerkyot \
+            --password="${KEYSTORE_PASSWORD:-nerkyot}" \
+            --keyPassword="${KEYSTORE_PASSWORD:-nerkyot}"
+
+      - name: Show what was produced
+        run: ls -lh ./*.apk ./*.aab 2>/dev/null || true
+
+      - name: Upload the installable app
+        uses: actions/upload-artifact@v4
+        with:
+          name: nerkyot-android
+          path: |
+            *.apk
+            *.aab
+          if-no-files-found: error
+
+      - name: Upload the new signing key (first build only)
+        if: steps.keystore.outputs.created == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: SIGNING-KEY-store-this-somewhere-safe
+          path: |
+            android.keystore
+            android.keystore.base64
+          retention-days: 1
+          if-no-files-found: error
