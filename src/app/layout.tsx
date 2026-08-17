@@ -33,6 +33,28 @@ import { Providers } from "@/components/providers";
 export const metadata: Metadata = {
   title: "NerKyot",
   description: "Chat with your GDS AI Gateway",
+  applicationName: "NerKyot",
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "NerKyot",
+    // Not "black-translucent": that runs content under the status bar with
+    // light text, which vanishes against the light design directions.
+    statusBarStyle: "default",
+  },
+  other: {
+    // `capable: true` above emits the standardised `mobile-web-app-capable`.
+    // Current iOS launches standalone from the manifest's display member, but
+    // older versions only understand Apple's original tag — without it they
+    // open a Safari tab instead of the app.
+    "apple-mobile-web-app-capable": "yes",
+  },
 };
 
 export const viewport: Viewport = {

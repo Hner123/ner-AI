@@ -94,6 +94,38 @@ Without a real `GDS_GATEWAY_URL`/`GDS_GATEWAY_KEY`, everything works except
 actual model replies (accounts, conversations, sidebar, rename/delete) — a
 failed chat request surfaces as a toast instead of a crash.
 
+## Install it on a phone
+
+There's no separate mobile app and no second codebase — this one installs to a
+home screen. On iOS: Safari → Share → **Add to Home Screen**. On Android:
+Chrome offers **Install app**. It then launches with its own icon, fullscreen,
+with no browser chrome, and stays signed in.
+
+Three details make that work, and they're easy to break:
+
+- **`public/sw.js` caches nothing, deliberately.** It exists only because
+  Chrome on Android won't offer to install a web app without a registered
+  service worker that has a fetch handler — without it you get a bookmark, not
+  an app. It intercepts navigations only and passes them straight through, so
+  the streaming `/api/chat` response is untouched. Adding caching here would
+  buy offline access at the price of serving a stale build after a deploy.
+- **`body` carries `env(safe-area-inset-*)` padding** ([globals.css](src/app/globals.css)).
+  Launched fullscreen there's no browser chrome keeping content clear of the
+  notch and the home indicator. It resolves to `0px` in a normal tab, so it
+  costs nothing there.
+- **`theme-color` is synced at runtime**, not fixed in the manifest
+  ([theme-color-sync.tsx](src/components/theme-color-sync.tsx)). The manifest
+  allows one static colour, which would be wrong for seven of the eight
+  combinations of four designs × light/dark.
+
+Both `mobile-web-app-capable` (standardised, emitted by Next) and
+`apple-mobile-web-app-capable` (legacy) are set — current iOS launches
+standalone from the manifest's `display`, older versions only understand
+Apple's original tag.
+
+Icons are generated from IBM Plex Mono, the same face the Console direction
+uses, so the home-screen icon matches the app it opens.
+
 ## Message actions
 
 Hovering a reply reveals **copy** and **regenerate** underneath it (both are
