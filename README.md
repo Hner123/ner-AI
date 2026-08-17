@@ -94,6 +94,20 @@ Without a real `GDS_GATEWAY_URL`/`GDS_GATEWAY_KEY`, everything works except
 actual model replies (accounts, conversations, sidebar, rename/delete) — a
 failed chat request surfaces as a toast instead of a crash.
 
+## Message actions
+
+Hovering a reply reveals **copy** and **regenerate** underneath it (both are
+always visible on touch, where hover never fires). Copy yields the raw
+markdown, so it pastes into an editor as source; code blocks get their own
+copy button that yields just the code, without the fences. When a turn fails
+outright there's no reply to hang an action off, so a **Try again** row
+appears in its place — the error toast is gone by the time anyone reacts to it.
+
+Regenerate is offered on the newest reply only: replacing an older one would
+strand every turn recorded after it. The route detects the SDK's
+`regenerate-message` trigger and deletes the superseded row, otherwise the
+discarded answer reappears next to the new one on reload.
+
 ## Web search
 
 The globe in the composer turns on **OpenAI's hosted web search** for that

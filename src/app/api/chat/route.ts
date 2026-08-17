@@ -25,11 +25,12 @@ export async function POST(req: Request) {
   }
 
   const body = (await req.json().catch(() => null)) as
-    | { id?: string; messages?: ChatUIMessage[]; webSearch?: boolean }
+    | { id?: string; messages?: ChatUIMessage[]; webSearch?: boolean; trigger?: string }
     | null;
   const conversationId = body?.id;
   const messages = body?.messages;
   const webSearch = body?.webSearch === true;
+  const isRegenerate = body?.trigger === "regenerate-message";
   if (!conversationId || !Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
@@ -61,6 +62,19 @@ export async function POST(req: Request) {
         createdAt: requestStartedAt,
       },
       update: {},
+    });
+  }
+
+  // Regenerating drops the old reply from the client's list and streams a
+  // replacement under a fresh id. The superseded row has to go, or reloading
+  // the conversation shows the discarded answer alongside the new one.
+  if (isRegenerate) {
+    await prisma.message.deleteMany({
+      where: {
+        conversationId,
+        role: "assistant",
+        id: { notIn: messages.map((m) => m.id).filter(Boolean) },
+      },
     });
   }
 

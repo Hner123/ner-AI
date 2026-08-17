@@ -1,15 +1,27 @@
 import { isFileUIPart, isReasoningUIPart, isTextUIPart } from "ai";
-import { FileTextIcon } from "lucide-react";
+import { FileTextIcon, RefreshCwIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 
+import { CodeBlock } from "@/components/chat/code-block";
+import { CopyButton } from "@/components/chat/copy-button";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import type { ChatUIMessage } from "@/lib/chat-message";
 import { cn } from "@/lib/utils";
 
-export function MessageBubble({ message }: { message: ChatUIMessage }) {
+export function MessageBubble({
+  message,
+  onRegenerate,
+  busy,
+}: {
+  message: ChatUIMessage;
+  /** Only passed for the latest assistant reply — regenerating an older one
+   *  would orphan every turn that came after it. */
+  onRegenerate?: () => void;
+  busy?: boolean;
+}) {
   const isUser = message.role === "user";
   const text = message.parts.filter(isTextUIPart).map((p) => p.text).join("");
   const reasoning = message.parts.filter(isReasoningUIPart).map((p) => p.text).join("");
@@ -18,7 +30,7 @@ export function MessageBubble({ message }: { message: ChatUIMessage }) {
   const hasAttachments = images.length > 0 || docs.length > 0;
 
   return (
-    <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
+    <div className={cn("group/msg flex flex-col", isUser ? "items-end" : "items-start")}>
       <div
         className={cn(
           "max-w-[85%] space-y-2 rounded-md px-4 py-2.5 text-sm leading-relaxed",
@@ -90,6 +102,7 @@ export function MessageBubble({ message }: { message: ChatUIMessage }) {
                 // Web-search answers cite their sources as inline links;
                 // opening them in place would throw away the conversation.
                 a: ({ ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+                pre: CodeBlock,
               }}
             >
               {text}
@@ -99,6 +112,27 @@ export function MessageBubble({ message }: { message: ChatUIMessage }) {
           !isUser && !hasAttachments && <TypingIndicator />
         )}
       </div>
+
+      {/* Actions sit under the bubble, revealed on hover — but kept in the DOM
+          so they stay reachable by keyboard and on touch, where hover never
+          fires. Only for finished assistant replies. */}
+      {!isUser && text && (
+        <div className="pointer-events-none mt-1 flex items-center gap-0.5 opacity-0 transition-opacity group-hover/msg:pointer-events-auto group-hover/msg:opacity-100 focus-within:pointer-events-auto focus-within:opacity-100 max-md:pointer-events-auto max-md:opacity-100">
+          <CopyButton getText={() => text} label="Copy reply" />
+          {onRegenerate && (
+            <button
+              type="button"
+              onClick={onRegenerate}
+              disabled={busy}
+              aria-label="Regenerate reply"
+              title="Regenerate reply"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex items-center rounded p-1 transition-colors disabled:opacity-40"
+            >
+              <RefreshCwIcon className="size-3.5" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

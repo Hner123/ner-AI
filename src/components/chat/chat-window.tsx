@@ -2,6 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type FileUIPart } from "ai";
+import { RefreshCwIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -32,7 +33,7 @@ export function ChatWindow({
   const [webSearch, setWebSearch] = useState(initialWebSearch);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status, stop } = useChat<ChatUIMessage>({
+  const { messages, sendMessage, status, stop, regenerate, error } = useChat<ChatUIMessage>({
     id: conversationId,
     messages: initialMessages,
     transport: new DefaultChatTransport({ api: "/api/chat" }),
@@ -122,8 +123,19 @@ export function ChatWindow({
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
-          {messages.map((m) => (
-            <MessageBubble key={m.id} message={m} />
+          {messages.map((m, i) => (
+            <MessageBubble
+              key={m.id}
+              message={m}
+              // Regeneration replaces the newest reply; offering it on an older
+              // one would strand every turn recorded after it.
+              onRegenerate={
+                m.role === "assistant" && i === messages.length - 1 && !streaming
+                  ? () => void regenerate()
+                  : undefined
+              }
+              busy={streaming}
+            />
           ))}
           {showPendingBubble && (
             // The request is in flight but no assistant message exists yet, so
@@ -137,6 +149,21 @@ export function ChatWindow({
               <div className="bg-chat-ai max-w-[85%] rounded-md border px-4 py-2.5">
                 <TypingIndicator />
               </div>
+            </div>
+          )}
+          {error && !streaming && (
+            // A failed turn leaves no assistant bubble to hang a retry off, and
+            // the error toast is long gone by the time anyone reacts to it.
+            <div className="flex items-center gap-2 self-start rounded-md border border-dashed px-3 py-2">
+              <span className="text-muted-foreground text-xs">That reply didn&apos;t go through.</span>
+              <button
+                type="button"
+                onClick={() => void regenerate()}
+                className="font-ui text-brand inline-flex items-center gap-1 text-xs font-medium hover:underline"
+              >
+                <RefreshCwIcon className="size-3" />
+                Try again
+              </button>
             </div>
           )}
           <div ref={bottomRef} />
