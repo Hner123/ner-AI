@@ -120,11 +120,22 @@ jobs:
             fs.writeFileSync('twa-manifest.json', JSON.stringify(m, null, 2));
           "
 
+      - name: Generate the Android project
+        # `build` compiles an existing Android project; it doesn't create one.
+        # Only twa-manifest.json is committed (the generated Gradle project is
+        # derived output), so it gets regenerated here. `update` is the
+        # non-interactive path — `init` prompts for every value.
+        run: bubblewrap update --skipVersionUpgrade
+
       - name: Build the app
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           set -euo pipefail
+          # Passwords are read from these env vars — there are no CLI flags for
+          # them, and without them the build stops at an interactive prompt.
+          export BUBBLEWRAP_KEYSTORE_PASSWORD="${KEYSTORE_PASSWORD:-nerkyot}"
+          export BUBBLEWRAP_KEY_PASSWORD="${KEYSTORE_PASSWORD:-nerkyot}"
           # --skipPwaValidation: the site requires a login, so the validator
           # only ever sees the sign-in page and scores it as a failure. The
           # manifest, icons and service worker are verified separately by the
@@ -132,9 +143,7 @@ jobs:
           bubblewrap build \
             --skipPwaValidation \
             --signingKeyPath=./android.keystore \
-            --signingKeyAlias=nerkyot \
-            --password="${KEYSTORE_PASSWORD:-nerkyot}" \
-            --keyPassword="${KEYSTORE_PASSWORD:-nerkyot}"
+            --signingKeyAlias=nerkyot
 
       - name: Show what was produced
         run: ls -lh ./*.apk ./*.aab 2>/dev/null || true
