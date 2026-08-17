@@ -62,6 +62,23 @@ jobs:
           echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
           echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
 
+          # Gradle refuses to auto-install SDK packages, so the ones the
+          # generated project compiles against are installed up front and the
+          # licences accepted. Missing either produces the classic "Failed to
+          # install the following packages ... licences have not been accepted".
+          SDKMGR="$SDK/cmdline-tools/latest/bin/sdkmanager"
+          [ -x "$SDKMGR" ] || SDKMGR="$SDK/tools/bin/sdkmanager"
+          if [ -x "$SDKMGR" ]; then
+            yes | "$SDKMGR" --licenses > /dev/null 2>&1 || true
+            "$SDKMGR" "platform-tools" \
+              "platforms;android-35" "build-tools;35.0.0" \
+              "platforms;android-34" "build-tools;34.0.0" > /dev/null 2>&1 || true
+            echo "SDK packages present:"
+            "$SDKMGR" --list_installed 2>/dev/null | head -20 || true
+          else
+            echo "No sdkmanager found at $SDKMGR — relying on the preinstalled image."
+          fi
+
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
