@@ -38,8 +38,29 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Locate the Android SDK
+        # Deliberately not android-actions/setup-android: every action here is
+        # GitHub's own, so the build still runs under a repository policy that
+        # only permits first-party actions. GitHub's Ubuntu image already ships
+        # the SDK; the download is just a fallback if that ever changes.
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
+          if [ ! -d "$SDK/cmdline-tools" ] && [ ! -d "$SDK/platform-tools" ]; then
+            echo "No preinstalled SDK found — fetching the command line tools."
+            SDK="$HOME/android-sdk"
+            mkdir -p "$SDK/cmdline-tools"
+            curl -sSLo /tmp/cmdline-tools.zip \
+              https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+            unzip -q /tmp/cmdline-tools.zip -d "$SDK/cmdline-tools"
+            mv "$SDK/cmdline-tools/cmdline-tools" "$SDK/cmdline-tools/latest"
+            yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+            "$SDK/cmdline-tools/latest/bin/sdkmanager" \
+              "platform-tools" "platforms;android-34" "build-tools;34.0.0" > /dev/null
+          fi
+          echo "Using Android SDK at $SDK"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
 
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
