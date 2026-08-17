@@ -6,7 +6,7 @@ import { auth } from "@/auth";
 import type { Prisma } from "@/generated/prisma/client";
 import type { ChatUIMessage, DocPart } from "@/lib/chat-message";
 import { prisma } from "@/lib/db";
-import { gateway } from "@/lib/gateway";
+import { gatewayFor } from "@/lib/gateway";
 import { persistableParts, uiMessageFileParts, uiMessageText } from "@/lib/messages";
 
 export async function POST(req: Request) {
@@ -25,10 +25,11 @@ export async function POST(req: Request) {
   }
 
   const body = (await req.json().catch(() => null)) as
-    | { id?: string; messages?: ChatUIMessage[] }
+    | { id?: string; messages?: ChatUIMessage[]; webSearch?: boolean }
     | null;
   const conversationId = body?.id;
   const messages = body?.messages;
+  const webSearch = body?.webSearch === true;
   if (!conversationId || !Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
@@ -88,7 +89,7 @@ export async function POST(req: Request) {
   const userId = session.user.id;
 
   const result = streamText({
-    model: gateway(conversation.model),
+    model: gatewayFor(webSearch)(conversation.model),
     messages: modelMessages,
     // Token accounting is recorded per USER (not per conversation) so totals
     // survive someone deleting their chats — see the UsageEvent model.

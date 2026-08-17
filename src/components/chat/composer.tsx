@@ -1,7 +1,7 @@
 "use client";
 
 import type { FileUIPart } from "ai";
-import { ArrowUpIcon, FileTextIcon, PaperclipIcon, SquareIcon, XIcon } from "lucide-react";
+import { ArrowUpIcon, FileTextIcon, GlobeIcon, PaperclipIcon, SquareIcon, XIcon } from "lucide-react";
 import {
   useRef,
   useState,
@@ -37,12 +37,18 @@ export function Composer({
   disabled,
   streaming,
   placeholder = "Message…",
+  webSearch,
+  onWebSearchChange,
 }: {
   onSend: (text: string, files: FileUIPart[], docs: DocPart[]) => void;
   onStop?: () => void;
   disabled?: boolean;
   streaming?: boolean;
   placeholder?: string;
+  /** Owned by the parent so the choice survives the empty-state → conversation
+   *  hand-off, which remounts this component. */
+  webSearch: boolean;
+  onWebSearchChange: (on: boolean) => void;
 }) {
   const textRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -233,6 +239,23 @@ export function Composer({
             e.target.value = "";
           }}
         />
+        <Button
+          type="button"
+          variant="ghost"
+          size={webSearch ? "sm" : "icon"}
+          onClick={() => onWebSearchChange(!webSearch)}
+          aria-pressed={webSearch}
+          aria-label="Search the web"
+          title="Search the web — slower, and uses far more tokens"
+          className={
+            webSearch
+              ? "bg-brand/12 text-brand hover:bg-brand/20 hover:text-brand gap-1.5 rounded-xl"
+              : "rounded-xl"
+          }
+        >
+          <GlobeIcon className="size-4" />
+          {webSearch && <span className="font-ui text-xs">Search</span>}
+        </Button>
         <Textarea
           ref={textRef}
           rows={1}

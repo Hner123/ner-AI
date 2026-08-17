@@ -24,8 +24,20 @@ const baseURL = `${(process.env.GDS_GATEWAY_URL ?? "").replace(/\/+$/, "")}/v1`;
 // public option to swap the error schema, so a small fetch middleware
 // reshapes it on the way through — budget/rate-limit/model-whitelist errors
 // then surface with their real message instead of a generic failure.
-const gatewayFetch: typeof fetch = async (input, init) => {
-  const response = await fetch(input, init);
+const createGatewayFetch = (bodyExtras?: Record<string, unknown>): typeof fetch => async (
+  input,
+  init,
+) => {
+  // Extra request fields are merged here rather than passed as providerOptions:
+  // the openai-compatible provider validates those against a fixed schema
+  // (user/reasoningEffort/textVerbosity/strictJsonSchema) and silently strips
+  // anything else, so web_search_options would never reach the wire.
+  const request =
+    bodyExtras && typeof init?.body === "string"
+      ? { ...init, body: JSON.stringify({ ...JSON.parse(init.body), ...bodyExtras }) }
+      : init;
+
+  const response = await fetch(input, request);
   if (response.ok) return response;
 
   const raw = await response.clone().text();
@@ -48,10 +60,32 @@ const gatewayFetch: typeof fetch = async (input, init) => {
 // Claude OAuth) to OpenAI chat-completion chunks, so a single OpenAI-compatible
 // provider covers all of them — the model id alone decides which one is used
 // on the other side of the gateway's model_whitelist check.
-export const gateway = createOpenAICompatible({
+const providerSettings = {
   name: "gds-gateway",
   baseURL,
   apiKey: process.env.GDS_GATEWAY_KEY,
   includeUsage: true,
-  fetch: gatewayFetch,
+};
+
+export const gateway = createOpenAICompatible({
+  ...providerSettings,
+  fetch: createGatewayFetch(),
 });
+
+/**
+ * Same gateway, with OpenAI's hosted web search switched on: the search runs
+ * on OpenAI's side and the results are injected into the prompt before the
+ * model answers, so there's no third-party search key or crawler here.
+ *
+ * That injection is why search is opt-in per message (the globe in the
+ * composer) — it pushes a request from a few hundred prompt tokens to roughly
+ * 10-16k, against the one shared gateway key.
+ */
+const gatewaySearch = createOpenAICompatible({
+  ...providerSettings,
+  fetch: createGatewayFetch({ web_search_options: {} }),
+});
+
+export function gatewayFor(webSearch: boolean) {
+  return webSearch ? gatewaySearch : gateway;
+}

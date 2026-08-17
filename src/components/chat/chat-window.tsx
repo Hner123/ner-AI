@@ -18,15 +18,18 @@ export function ChatWindow({
   model,
   allowedModels,
   initialMessages,
+  initialWebSearch = false,
 }: {
   conversationId: string;
   title: string;
   model: string;
   allowedModels: string[];
   initialMessages: ChatUIMessage[];
+  initialWebSearch?: boolean;
 }) {
   const router = useRouter();
   const [currentModel, setCurrentModel] = useState(model);
+  const [webSearch, setWebSearch] = useState(initialWebSearch);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const { messages, sendMessage, status, stop } = useChat<ChatUIMessage>({
@@ -39,7 +42,12 @@ export function ChatWindow({
     onFinish: () => router.refresh(),
   });
 
-  function handleSend(text: string, files: FileUIPart[], docs: DocPart[]) {
+  function handleSend(
+    text: string,
+    files: FileUIPart[],
+    docs: DocPart[],
+    searchOverride?: boolean,
+  ) {
     // Built as explicit parts (rather than sendMessage's text/files shorthand)
     // so attached documents can travel as data parts alongside the text.
     const parts: ChatUIMessage["parts"] = [
@@ -48,7 +56,9 @@ export function ChatWindow({
     ];
     if (text) parts.push({ type: "text", text });
     if (parts.length === 0) return;
-    sendMessage({ parts });
+    // Per-request, not per-conversation: the route reads this to decide whether
+    // to enable the gateway's hosted web search for this turn only.
+    sendMessage({ parts }, { body: { webSearch: searchOverride ?? webSearch } });
   }
 
   // The empty-state composer creates the conversation, stashes the first
@@ -59,12 +69,20 @@ export function ChatWindow({
     if (raw) {
       sessionStorage.removeItem(key);
       try {
-        const { text, files, docs } = JSON.parse(raw) as {
+        const {
+          text,
+          files,
+          docs,
+          webSearch: pendingWebSearch,
+        } = JSON.parse(raw) as {
           text: string;
           files: FileUIPart[];
           docs?: DocPart[];
+          webSearch?: boolean;
         };
-        handleSend(text, files ?? [], docs ?? []);
+        // The toggle itself carries over via ?search=1 (initialWebSearch); this
+        // first send predates that state, so the flag is passed explicitly.
+        handleSend(text, files ?? [], docs ?? [], pendingWebSearch ?? false);
       } catch {
         // malformed payload — nothing to recover, drop it silently
       }
@@ -132,6 +150,8 @@ export function ChatWindow({
           disabled={streaming}
           streaming={streaming}
           placeholder="Message NerKyot…"
+          webSearch={webSearch}
+          onWebSearchChange={setWebSearch}
         />
       </div>
     </div>

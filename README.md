@@ -94,6 +94,26 @@ Without a real `GDS_GATEWAY_URL`/`GDS_GATEWAY_KEY`, everything works except
 actual model replies (accounts, conversations, sidebar, rename/delete) — a
 failed chat request surfaces as a toast instead of a crash.
 
+## Web search
+
+The globe in the composer turns on **OpenAI's hosted web search** for that
+message: OpenAI runs the search on their side and injects the results into the
+prompt before the model answers, so there is no third-party search key, no
+crawler and no extra container here. Answers come back citing their sources as
+inline links (opened in a new tab).
+
+It's **off by default and opt-in per message**, because searching roughly
+doubles-to-triples the request: ~4.7k prompt tokens for an ordinary message on
+`gpt-5.6-*` versus ~8–16k with search, all against the one shared gateway key.
+Turning it on in the empty state carries into the conversation it creates (via
+`?search=1`), so follow-ups keep searching until you switch it off.
+
+Mechanically, the flag rides in as `web_search_options` on the request body,
+merged by the fetch middleware in [gateway.ts](src/lib/gateway.ts) — *not* via
+`providerOptions`, which the openai-compatible provider validates against a
+fixed schema (`user`/`reasoningEffort`/`textVerbosity`/`strictJsonSchema`) and
+silently strips unknown keys from.
+
 ## Settings
 
 **`/settings`** is open to every signed-in user and holds the two personal

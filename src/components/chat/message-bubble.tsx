@@ -83,7 +83,15 @@ export function MessageBubble({ message }: { message: ChatUIMessage }) {
         )}
         {text ? (
           <div className="prose prose-chat prose-sm dark:prose-invert max-w-none break-words">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+              components={{
+                // Web-search answers cite their sources as inline links;
+                // opening them in place would throw away the conversation.
+                a: ({ ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+              }}
+            >
               {text}
             </ReactMarkdown>
           </div>
