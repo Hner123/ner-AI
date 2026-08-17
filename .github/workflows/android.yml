@@ -141,6 +141,9 @@ jobs:
             fs.writeFileSync('twa-manifest.json', JSON.stringify(m, null, 2));
           "
 
+      - name: Check the toolchain Bubblewrap sees
+        run: bubblewrap doctor || true
+
       - name: Generate the Android project
         # `build` compiles an existing Android project; it doesn't create one.
         # Only twa-manifest.json is committed (the generated Gradle project is
@@ -161,10 +164,18 @@ jobs:
           # only ever sees the sign-in page and scores it as a failure. The
           # manifest, icons and service worker are verified separately by the
           # PWA test suite.
-          bubblewrap build \
-            --skipPwaValidation \
-            --signingKeyPath=./android.keystore \
-            --signingKeyAlias=nerkyot
+          # The failure tail is echoed as an annotation because raw job logs
+          # need authentication to read, while annotations don't — so a broken
+          # build can be diagnosed from the run itself.
+          if ! bubblewrap build \
+                --skipPwaValidation \
+                --signingKeyPath=./android.keystore \
+                --signingKeyAlias=nerkyot 2>&1 | tee /tmp/build.log; then
+            MSG=$(tail -45 /tmp/build.log \
+                  | sed 's/%/%25/g' | tr -d '\r' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=bubblewrap build failed::$MSG"
+            exit 1
+          fi
 
       - name: Show what was produced
         run: ls -lh ./*.apk ./*.aab 2>/dev/null || true
