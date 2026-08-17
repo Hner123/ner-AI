@@ -44,6 +44,27 @@ services:
     networks:
       - ner-ai-net
 
+  # Dumps the database on a timer and prunes old files. Same image as the
+  # server so pg_dump's version always matches what it's dumping — a newer
+  # server than client is refused outright.
+  backup:
+    image: postgres:16-alpine
+    container_name: ner-ai-backup
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    volumes:
+      - ./scripts/backup.sh:/backup.sh:ro
+      # A bind mount, not a named volume: backups you can't see or copy off the
+      # box are backups you won't have when the box is the thing that died.
+      - ./backups:/backups
+    entrypoint: ["/bin/sh", "/backup.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ner-ai-net
+
 volumes:
   pgdata:
 

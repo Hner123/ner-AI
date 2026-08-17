@@ -48,3 +48,9 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# database dumps — these contain every message and every password hash, so
+# they must never end up in the repo. The directory itself is kept, so the
+# compose bind mount has somewhere to land on a fresh clone.
+/backups/*
+!/backups/.gitkeep

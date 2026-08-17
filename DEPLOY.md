@@ -131,11 +131,51 @@ everyone. Settings shows tokens per user so you can see who's consuming what.
 Anyone with an account can spend from that budget, so only create accounts for
 people you'd hand the key to.
 
-**Back up Postgres.** The database holds every account and conversation, and
-lives in the `pgdata` volume. Nothing else does.
+**Backups run themselves.** The database holds every account and conversation
+and lives in the `pgdata` volume — nothing else does. The `backup` service in
+the compose stack dumps it every 24h into `./backups/` and prunes anything
+older than 7 days. It takes one immediately on startup (so a broken setup
+shows up at deploy time, not at 3am), skips that if a dump under an hour old
+already exists, and retries in 15 minutes rather than a full day if an attempt
+fails. Tune with `BACKUP_KEEP_DAYS`, `BACKUP_INTERVAL_SECONDS` and
+`BACKUP_RETRY_SECONDS` in `.env.docker`.
+
+Check on it:
 
 ```bash
-docker compose exec postgres pg_dump -U ner_ai ner_ai | gzip > nerkyot-$(date +%F).sql.gz
+docker compose logs backup | tail    # what it's been doing
+ls -lh backups/                      # what it has
+```
+
+**Copy them off the server.** A backup that only exists on the machine it's
+protecting is not a backup — if that disk dies, both go together. Pull them
+down periodically:
+
+```bash
+scp 'you@your-server:~/ner-AI/backups/*.sql.gz' ./
+```
+
+Dumps contain every message and every password hash, so keep them somewhere
+you'd be comfortable keeping the database itself. `./backups/` is gitignored.
+
+**Restore.** Verify a backup restores *before* you need it — into a scratch
+database, so the live one is untouched:
+
+```bash
+docker compose exec postgres createdb -U ner_ai restore_test
+gunzip -c backups/nerkyot-YYYYMMDD-HHMMSS.sql.gz | docker compose exec -T postgres psql -U ner_ai -d restore_test
+docker compose exec postgres psql -U ner_ai -d restore_test -c 'SELECT count(*) FROM "Message";'
+docker compose exec postgres dropdb -U ner_ai restore_test
+```
+
+To restore for real, over the live database:
+
+```bash
+docker compose stop ner-ai                                   # stop writes first
+docker compose exec postgres dropdb -U ner_ai ner_ai
+docker compose exec postgres createdb -U ner_ai ner_ai
+gunzip -c backups/nerkyot-YYYYMMDD-HHMMSS.sql.gz | docker compose exec -T postgres psql -U ner_ai -d ner_ai
+docker compose start ner-ai
 ```
 
 **Updating.**
