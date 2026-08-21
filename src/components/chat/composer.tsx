@@ -242,14 +242,18 @@ export function Composer({
         <Button
           type="button"
           variant="ghost"
-          size={webSearch ? "sm" : "icon"}
+          // Always the icon size, so the button keeps its height (size-8) when
+          // the label appears — switching to size="sm" made it 4px shorter and
+          // knocked the whole composer row out of alignment. Only the width
+          // grows.
+          size="icon"
           onClick={() => onWebSearchChange(!webSearch)}
           aria-pressed={webSearch}
           aria-label="Search the web"
           title="Search the web — slower, and uses far more tokens"
           className={
             webSearch
-              ? "bg-brand/12 text-brand hover:bg-brand/20 hover:text-brand gap-1.5 rounded-xl"
+              ? "bg-brand/12 text-brand hover:bg-brand/20 hover:text-brand w-auto gap-1.5 rounded-xl px-2.5"
               : "rounded-xl"
           }
         >
