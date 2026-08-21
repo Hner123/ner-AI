@@ -150,6 +150,40 @@ Apple's original tag.
 Icons are generated from IBM Plex Mono, the same face the Console direction
 uses, so the home-screen icon matches the app it opens.
 
+## Creating spreadsheets and documents
+
+Ask for a spreadsheet or a document and you get a real file back — a genuine
+`.xlsx` or `.docx`, not a markdown table. It arrives as a download chip in the
+reply and keeps working when you reopen the conversation months later.
+
+The model calls a tool ([ai-tools.ts](src/lib/ai-tools.ts)); the server builds
+the file with `exceljs` / `docx` ([documents.ts](src/lib/documents.ts)) and
+stores the bytes in Postgres. There's no object storage in this deployment, and
+regenerating a file on demand would cost another model call and wouldn't be
+byte-identical, so the bytes are kept.
+
+Numbers go in as numbers, so Excel can total them — a spreadsheet full of
+text-formatted figures is useless. Headers are bold and frozen, and columns are
+sized to their contents.
+
+Three things worth knowing before changing this:
+
+- **`stopWhen: stepCountIs(2)`** in the chat route is a limit, not a default.
+  One round of tool calls, then the model must write its reply. At four steps a
+  single "put this in Excel" produced **four spreadsheets** — the model kept
+  refining the filename and never got round to answering, leaving a reply that
+  was nothing but download chips.
+- **The route appends missing links on persist.** The model is asked to echo
+  the link and normally does; without the fallback, a turn where it forgets
+  leaves the bytes orphaned in the database with nothing pointing at them.
+- **`/api/files/[id]` checks ownership**, not just the id. A cuid is
+  unguessable but isn't authorisation — a link pasted into a group chat would
+  otherwise hand over whatever the spreadsheet contains.
+
+Editing an uploaded `.xlsx` isn't built yet. Editing a `.docx` while keeping
+its formatting isn't realistically possible in JavaScript — `mammoth` only
+reads — so that would mean regenerating the document and losing its styling.
+
 ## Message actions
 
 Hovering a reply reveals **copy** and **regenerate** underneath it (both are

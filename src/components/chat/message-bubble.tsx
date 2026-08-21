@@ -1,5 +1,5 @@
 import { isFileUIPart, isReasoningUIPart, isTextUIPart } from "ai";
-import { FileTextIcon, RefreshCwIcon } from "lucide-react";
+import { FileDownIcon, FileTextIcon, RefreshCwIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
@@ -99,9 +99,28 @@ export function MessageBubble({
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}
               components={{
-                // Web-search answers cite their sources as inline links;
-                // opening them in place would throw away the conversation.
-                a: ({ ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+                a: ({ href, children, ...props }) => {
+                  // A generated file reads as something to download, not as a
+                  // sentence to click through — and it must not open in a new
+                  // tab, or the browser flashes a blank window before the
+                  // attachment starts.
+                  if (href?.startsWith("/api/files/")) {
+                    return (
+                      <a
+                        href={href}
+                        download
+                        className="border-border bg-background hover:bg-muted my-1 inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 no-underline transition-colors"
+                        {...props}
+                      >
+                        <FileDownIcon className="text-muted-foreground size-4 shrink-0" />
+                        <span className="font-ui text-xs font-medium">{children}</span>
+                      </a>
+                    );
+                  }
+                  // Web-search answers cite their sources as inline links;
+                  // opening them in place would throw away the conversation.
+                  return <a href={href} {...props} target="_blank" rel="noopener noreferrer">{children}</a>;
+                },
                 pre: CodeBlock,
               }}
             >

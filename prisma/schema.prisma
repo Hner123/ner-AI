@@ -19,6 +19,7 @@ model User {
   createdAt     DateTime       @default(now())
   conversations Conversation[]
   usageEvents   UsageEvent[]
+  files         GeneratedFile[]
 }
 
 /// One row per completed model call, so per-user token totals survive the user
@@ -45,8 +46,28 @@ model Conversation {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   messages  Message[]
+  files     GeneratedFile[]
 
   @@index([userId, updatedAt])
+}
+
+/// A spreadsheet or document the assistant produced. The bytes live here
+/// because there is no object storage in this deployment, and a download link
+/// in an old conversation has to keep working — regenerating the file later
+/// would cost another model call and wouldn't be byte-identical anyway.
+model GeneratedFile {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  filename       String
+  mediaType      String
+  size           Int
+  data           Bytes
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
 }
 
 model Message {

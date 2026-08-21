@@ -1,4 +1,4 @@
-import { convertToModelMessages, streamText } from "ai";
+import { convertToModelMessages, stepCountIs, streamText } from "ai";
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import type { Prisma } from "@/generated/prisma/client";
 import type { ChatUIMessage, DocPart } from "@/lib/chat-message";
 import { prisma } from "@/lib/db";
+import { fileTools } from "@/lib/ai-tools";
 import { gatewayFor } from "@/lib/gateway";
 import { persistableParts, uiMessageFileParts, uiMessageText } from "@/lib/messages";
 
@@ -102,9 +103,22 @@ export async function POST(req: Request) {
 
   const userId = session.user.id;
 
+  const tools = fileTools({ userId, conversationId });
+
   const result = streamText({
     model: gatewayFor(webSearch)(conversation.model),
     messages: modelMessages,
+    tools,
+    // Exactly two steps: one round of tool calls, then the model must write its
+    // reply. It needs the second step at all because otherwise it stops at the
+    // tool call and the message renders empty.
+    //
+    // Not more than two: with four, a single "put this in Excel" produced FOUR
+    // spreadsheets — the model kept refining the filename each step and never
+    // got round to answering, leaving a reply that was nothing but download
+    // chips. Several files at once are still possible, as parallel calls
+    // within the one round.
+    stopWhen: stepCountIs(2),
     // Token accounting is recorded per USER (not per conversation) so totals
     // survive someone deleting their chats — see the UsageEvent model.
     onFinish: async ({ usage }) => {
@@ -137,7 +151,24 @@ export async function POST(req: Request) {
     // exceptions, which isn't the right default for our own gateway's errors.
     onError: (error) => (error instanceof Error ? error.message : "Something went wrong."),
     onFinish: async ({ responseMessage }) => {
-      const text = uiMessageText(responseMessage);
+      let text = uiMessageText(responseMessage);
+
+      // Any file made during this turn has to be reachable from the persisted
+      // reply, or reopening the conversation loses it — the bytes would sit in
+      // the database with nothing linking to them. The model is asked to echo
+      // the link and usually does; this covers the times it doesn't.
+      const created = await prisma.generatedFile.findMany({
+        where: { conversationId, createdAt: { gte: requestStartedAt } },
+        select: { id: true, filename: true },
+        orderBy: { createdAt: "asc" },
+      });
+      const missing = created.filter((f) => !text.includes(`/api/files/${f.id}`));
+      if (missing.length) {
+        text =
+          `${text.trim()}\n\n` +
+          missing.map((f) => `[${f.filename}](/api/files/${f.id})`).join("\n");
+      }
+
       if (text.trim() && responseMessage.id) {
         await prisma.message.upsert({
           where: { id: responseMessage.id },
