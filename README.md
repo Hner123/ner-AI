@@ -184,6 +184,25 @@ Editing an uploaded `.xlsx` isn't built yet. Editing a `.docx` while keeping
 its formatting isn't realistically possible in JavaScript — `mammoth` only
 reads — so that would mean regenerating the document and losing its styling.
 
+## Scrolling during a reply
+
+The transcript follows a streaming reply only while the reader is already at
+the bottom. Scroll up and it stays put, with a **Jump to reply** button as the
+way back; return to the bottom and following resumes on its own. Sending a
+message always jumps to the bottom, since that's an explicit "show me the
+newest".
+
+Two details are load-bearing, both found by testing:
+
+- **The auto-follow scroll is instant, not smooth.** An animated scroll keeps
+  firing scroll events with positions near the bottom for as long as it runs,
+  so "is the reader at the bottom?" reads true throughout — and it overrides
+  the wheel mid-gesture. Streaming re-renders every few hundred milliseconds,
+  so there was always an animation in flight to fight with.
+- **An upward wheel or a touch drag stops following immediately**, rather than
+  waiting to infer it from scroll position. Position alone is a value the next
+  streamed chunk is about to overwrite.
+
 ## Message actions
 
 Hovering a reply reveals **copy** and **regenerate** underneath it (both are

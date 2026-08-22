@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type FileUIPart } from "ai";
-import { RefreshCwIcon } from "lucide-react";
+import { ArrowDownIcon, RefreshCwIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -32,6 +32,11 @@ export function ChatWindow({
   const [currentModel, setCurrentModel] = useState(model);
   const [webSearch, setWebSearch] = useState(initialWebSearch);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  // Whether the reader is sitting at the bottom. A ref, not state: it changes
+  // on every scroll event and nothing renders from it directly.
+  const followingRef = useRef(true);
+  const [showJump, setShowJump] = useState(false);
 
   const { messages, sendMessage, status, stop, regenerate, error } = useChat<ChatUIMessage>({
     id: conversationId,
@@ -92,13 +97,48 @@ export function ChatWindow({
   }, [conversationId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Only chase the bottom if that's where the reader already is. Scrolling
+    // unconditionally meant every streamed chunk yanked the viewport down, so
+    // reading back over a long reply while it was still being written was
+    // impossible.
+    const last = messages[messages.length - 1];
+    // Sending is an explicit "show me the newest", so rejoin the bottom even
+    // if they had scrolled away.
+    if (last?.role === "user") followingRef.current = true;
+    if (!followingRef.current) return;
+    // Instant, deliberately. An animated scroll keeps firing scroll events with
+    // positions near the bottom while it runs — so "is the reader at the
+    // bottom?" reads true throughout — and it overrides the wheel mid-gesture.
+    bottomRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages, status]);
 
   const streaming = status === "submitted" || status === "streaming";
   const canChangeModel = messages.length === 0;
   const showPendingBubble =
     status === "submitted" && messages[messages.length - 1]?.role !== "assistant";
+
+  function stopFollowing() {
+    if (!followingRef.current) return;
+    followingRef.current = false;
+    setShowJump(true);
+  }
+
+  function handleScroll() {
+    const el = scrollerRef.current;
+    if (!el) return;
+    // A threshold rather than an exact match: smooth scrolling and sub-pixel
+    // heights mean "at the bottom" is never precisely zero.
+    const fromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const atBottom = fromBottom < 80;
+    followingRef.current = atBottom;
+    setShowJump(!atBottom);
+  }
+
+  function jumpToLatest() {
+    followingRef.current = true;
+    setShowJump(false);
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
 
   async function changeModel(next: string) {
     setCurrentModel(next);
@@ -121,7 +161,18 @@ export function ChatWindow({
         />
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div
+        ref={scrollerRef}
+        onScroll={handleScroll}
+        // Scrolling up is an explicit request to stay put, taken directly from
+        // the gesture rather than inferred from a position the next streamed
+        // chunk would overwrite.
+        onWheel={(e) => {
+          if (e.deltaY < 0) stopFollowing();
+        }}
+        onTouchMove={stopFollowing}
+        className="min-h-0 flex-1 overflow-y-auto"
+      >
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
           {messages.map((m, i) => (
             <MessageBubble
@@ -170,7 +221,19 @@ export function ChatWindow({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-3xl p-4">
+      <div className="relative mx-auto w-full max-w-3xl p-4">
+        {showJump && (
+          <button
+            type="button"
+            onClick={jumpToLatest}
+            className="bg-card text-muted-foreground hover:text-foreground absolute -top-5 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 py-1.5 shadow-sm"
+          >
+            <ArrowDownIcon className="size-3.5" />
+            <span className="font-ui text-xs font-medium">
+              {streaming ? "Jump to reply" : "Jump to latest"}
+            </span>
+          </button>
+        )}
         <Composer
           onSend={handleSend}
           onStop={stop}
