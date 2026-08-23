@@ -16,10 +16,11 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     scope: "/",
     display: "standalone",
-    // Splash-screen colour. Static by necessity, so it's the default (Console
-    // light) — the live chrome colour is updated per design at runtime.
-    background_color: "#fafaf7",
-    theme_color: "#fafaf7",
+    // Splash-screen colour. Static by necessity, so it's the default
+    // (Familiar light) — the live chrome colour is updated per design at
+    // runtime by ThemeColorSync.
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     orientation: "any",
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },

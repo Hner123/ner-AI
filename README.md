@@ -54,7 +54,11 @@ All eight typefaces are self-hosted, but a browser only downloads the files it
 actually renders — the inactive directions cost a few KB of CSS and nothing
 more.
 
-Console is the default. Model ids show verbatim (`gpt-5.6-terra`) — the same
+**Familiar is the default**, so it owns the bare `:root` / `.dark` blocks —
+which double as the no-JS fallback. Those blocks must stay **first** in the
+file: `:root` and `[data-design="x"]` have equal specificity, so a later
+`:root` would override whichever direction the user actually picked. Model ids
+show verbatim (`gpt-5.6-terra`) — the same
 string you put in `ALLOWED_MODELS`. Chat surfaces have their own
 `--chat-user` / `--chat-ai` / `--brand` tokens rather than reusing `--primary`,
 so bubble styling and button styling move independently.

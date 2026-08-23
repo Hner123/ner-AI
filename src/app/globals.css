@@ -72,12 +72,96 @@
    Selector weights matter here: `.dark` and `[data-design="x"]` have equal
    specificity, so every direction needs its own `.dark[data-design="x"]`
    block (weight 0,2,0) or a light palette would win in dark mode. The bare
-   `:root` / `.dark` blocks are Console, which is also the fallback when the
-   attribute is missing (JS disabled).
+   `:root` / `.dark` blocks are Familiar, the default — they double as the
+   fallback when the attribute is missing (JS disabled), so they must stay
+   FIRST: at equal specificity a later `:root` would beat an earlier
+   `[data-design="x"]` and override the selected direction.
    ============================================================ */
 
-/* ---------- Console — terminal heritage ---------- */
+/* Deliberately plain: the look people already know from ChatGPT and its
+   imitators. Inter stands in for OpenAI's own Söhne/OpenAI Sans, which are
+   licensed and can't be self-hosted here — it's the same neo-grotesque idea.
+   --chat-ai matches --background on purpose, so assistant replies read as
+   plain text on the page rather than as bubbles, and --border is kept a hair
+   off the background so the outline all bubbles carry stays invisible. */
 :root,
+[data-design="familiar"] {
+  --f-ui: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --f-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --f-data: "JetBrains Mono", ui-monospace, monospace;
+  --radius: 1.5rem;
+
+  --background: #ffffff;
+  --foreground: #0d0d0d;
+  --card: #ffffff;
+  --card-foreground: #0d0d0d;
+  --popover: #ffffff;
+  --popover-foreground: #0d0d0d;
+  --primary: #0d0d0d;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f4;
+  --secondary-foreground: #0d0d0d;
+  --muted: #f4f4f4;
+  --muted-foreground: #6e6e80;
+  --accent: #ececec;
+  --accent-foreground: #0d0d0d;
+  --destructive: #d92d20;
+  --border: #f2f2f2;
+  --input: #e5e5e5;
+  --ring: #10a37f;
+  --sidebar: #f9f9f9;
+  --sidebar-foreground: #0d0d0d;
+  --sidebar-primary: #0d0d0d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ececec;
+  --sidebar-accent-foreground: #0d0d0d;
+  --sidebar-border: #ececec;
+  --sidebar-ring: #10a37f;
+  --brand: #0d0d0d;
+  --brand-foreground: #ffffff;
+  --chat-user: #f4f4f4;
+  --chat-user-foreground: #0d0d0d;
+  --chat-ai: #ffffff;
+  --chat-ai-foreground: #0d0d0d;
+}
+
+.dark,
+.dark[data-design="familiar"] {
+  --background: #212121;
+  --foreground: #ececec;
+  --card: #2f2f2f;
+  --card-foreground: #ececec;
+  --popover: #2f2f2f;
+  --popover-foreground: #ececec;
+  --primary: #ececec;
+  --primary-foreground: #212121;
+  --secondary: #303030;
+  --secondary-foreground: #ececec;
+  --muted: #303030;
+  --muted-foreground: #b4b4b4;
+  --accent: #3a3a3a;
+  --accent-foreground: #ececec;
+  --destructive: #f97066;
+  --border: #262626;
+  --input: #3a3a3a;
+  --ring: #10a37f;
+  --sidebar: #171717;
+  --sidebar-foreground: #ececec;
+  --sidebar-primary: #ececec;
+  --sidebar-primary-foreground: #212121;
+  --sidebar-accent: #2f2f2f;
+  --sidebar-accent-foreground: #ececec;
+  --sidebar-border: #2f2f2f;
+  --sidebar-ring: #10a37f;
+  --brand: #ececec;
+  --brand-foreground: #212121;
+  --chat-user: #303030;
+  --chat-user-foreground: #ececec;
+  --chat-ai: #212121;
+  --chat-ai-foreground: #ececec;
+}
+
+/* ---------- Console — terminal heritage ---------- */
 [data-design="console"] {
   --f-ui: "IBM Plex Mono", ui-monospace, monospace;
   --f-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
@@ -118,7 +202,6 @@
   --chat-ai-foreground: #16181d;
 }
 
-.dark,
 .dark[data-design="console"] {
   --background: #0d1117;
   --foreground: #e6edf3;
@@ -382,86 +465,7 @@
   --chat-ai-foreground: #e8eff5;
 }
 
-/* Deliberately plain: the look people already know from ChatGPT and its
-   imitators. Inter stands in for OpenAI's own Söhne/OpenAI Sans, which are
-   licensed and can't be self-hosted here — it's the same neo-grotesque idea.
-   --chat-ai matches --background on purpose, so assistant replies read as
-   plain text on the page rather than as bubbles, and --border is kept a hair
-   off the background so the outline all bubbles carry stays invisible. */
-[data-design="familiar"] {
-  --f-ui: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --f-body: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --f-data: "JetBrains Mono", ui-monospace, monospace;
-  --radius: 1.5rem;
 
-  --background: #ffffff;
-  --foreground: #0d0d0d;
-  --card: #ffffff;
-  --card-foreground: #0d0d0d;
-  --popover: #ffffff;
-  --popover-foreground: #0d0d0d;
-  --primary: #0d0d0d;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f4f4;
-  --secondary-foreground: #0d0d0d;
-  --muted: #f4f4f4;
-  --muted-foreground: #6e6e80;
-  --accent: #ececec;
-  --accent-foreground: #0d0d0d;
-  --destructive: #d92d20;
-  --border: #f2f2f2;
-  --input: #e5e5e5;
-  --ring: #10a37f;
-  --sidebar: #f9f9f9;
-  --sidebar-foreground: #0d0d0d;
-  --sidebar-primary: #0d0d0d;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #ececec;
-  --sidebar-accent-foreground: #0d0d0d;
-  --sidebar-border: #ececec;
-  --sidebar-ring: #10a37f;
-  --brand: #0d0d0d;
-  --brand-foreground: #ffffff;
-  --chat-user: #f4f4f4;
-  --chat-user-foreground: #0d0d0d;
-  --chat-ai: #ffffff;
-  --chat-ai-foreground: #0d0d0d;
-}
-
-.dark[data-design="familiar"] {
-  --background: #212121;
-  --foreground: #ececec;
-  --card: #2f2f2f;
-  --card-foreground: #ececec;
-  --popover: #2f2f2f;
-  --popover-foreground: #ececec;
-  --primary: #ececec;
-  --primary-foreground: #212121;
-  --secondary: #303030;
-  --secondary-foreground: #ececec;
-  --muted: #303030;
-  --muted-foreground: #b4b4b4;
-  --accent: #3a3a3a;
-  --accent-foreground: #ececec;
-  --destructive: #f97066;
-  --border: #262626;
-  --input: #3a3a3a;
-  --ring: #10a37f;
-  --sidebar: #171717;
-  --sidebar-foreground: #ececec;
-  --sidebar-primary: #ececec;
-  --sidebar-primary-foreground: #212121;
-  --sidebar-accent: #2f2f2f;
-  --sidebar-accent-foreground: #ececec;
-  --sidebar-border: #2f2f2f;
-  --sidebar-ring: #10a37f;
-  --brand: #ececec;
-  --brand-foreground: #212121;
-  --chat-user: #303030;
-  --chat-user-foreground: #ececec;
-  --chat-ai: #212121;
-  --chat-ai-foreground: #ececec;
-}
 
 @layer base {
   * {
