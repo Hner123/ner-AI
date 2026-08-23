@@ -113,7 +113,12 @@ export function ChatWindow({
   }, [messages, status]);
 
   const streaming = status === "submitted" || status === "streaming";
-  const canChangeModel = messages.length === 0;
+  // Switchable at any point in a thread, not just on an empty one: the model
+  // lives on the conversation and only decides who answers NEXT, so earlier
+  // replies stay exactly as they were. Held shut only while a reply is in
+  // flight — that request already went out under the old model, and the picker
+  // shouldn't claim otherwise mid-stream.
+  const canChangeModel = !streaming;
   const showPendingBubble =
     status === "submitted" && messages[messages.length - 1]?.role !== "assistant";
 
