@@ -19,7 +19,7 @@ Browser
 
 ## Design
 
-Four interchangeable looks, switchable at **Settings → Appearance** by any
+Five interchangeable looks, switchable at **Settings → Appearance** by any
 signed-in user (it's a per-browser preference, stored in `localStorage`):
 
 | Direction | Typography | Character |
@@ -146,8 +146,8 @@ Three details make that work, and they're easy to break:
   costs nothing there.
 - **`theme-color` is synced at runtime**, not fixed in the manifest
   ([theme-color-sync.tsx](src/components/theme-color-sync.tsx)). The manifest
-  allows one static colour, which would be wrong for seven of the eight
-  combinations of four designs × light/dark.
+  allows one static colour, which would be wrong for nine of the ten
+  combinations of five designs × light/dark.
 
 Both `mobile-web-app-capable` (standardised, emitted by Next) and
 `apple-mobile-web-app-capable` (legacy) are set — current iOS launches
