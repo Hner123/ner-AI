@@ -39,8 +39,23 @@ export async function POST(req: Request) {
   }
 
   const user = await prisma.user.create({
-    data: { email, name, passwordHash: await bcrypt.hash(password, 12), isAdmin: isAdmin ?? false },
-    select: { id: true, email: true, name: true, isAdmin: true, createdAt: true },
+    data: {
+      email,
+      name,
+      passwordHash: await bcrypt.hash(password, 12),
+      isAdmin: isAdmin ?? false,
+      // The password here was typed by someone else, so it's temporary by
+      // definition — the holder is made to replace it at first sign-in.
+      mustChangePassword: true,
+    },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      isAdmin: true,
+      createdAt: true,
+      mustChangePassword: true,
+    },
   });
 
   return NextResponse.json(

@@ -30,6 +30,7 @@ import "@fontsource/inter/600.css";
 import "./globals.css";
 import "highlight.js/styles/github-dark.css";
 
+import { AccountSetupGate } from "@/components/account-setup-gate";
 import { designScript } from "@/components/design-provider";
 import { Providers } from "@/components/providers";
 
@@ -79,7 +80,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       {/* dvh, not vh: on phones the address bar shrinks the viewport, and
           100vh would push the composer below the fold. */}
       <body className="flex h-dvh flex-col overflow-hidden">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          {/* Over everything, for anyone still on an admin-issued password. */}
+          <AccountSetupGate />
+        </Providers>
       </body>
     </html>
   );

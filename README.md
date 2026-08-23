@@ -258,6 +258,32 @@ to user management.
 Usage is read per-user from `UsageEvent`, so someone only ever sees their own
 figures — the shared-key totals for everyone stay in the admin view.
 
+## Handing over a new account
+
+An admin creates an account with a password they choose, so that password is
+temporary by definition — the admin knows it. The holder is made to replace it
+before they can use anything: their first sign-in lands on a prompt they can't
+dismiss, where they set their own password and the name shown beside their
+avatar. Their email stays as issued; it's the login identifier, so changing it
+is an admin's job.
+
+- The gate is a **server component in the root layout**
+  ([account-setup-gate.tsx](src/components/account-setup-gate.tsx)) that reads
+  `mustChangePassword` from the database on every render. Deciding this
+  client-side would mean it could be skipped by editing state, and it would
+  flash the app before hydration.
+- It is **not** a Dialog: those close on Escape and on an outside click.
+- **Reusing the issued password is refused** — accepting it would leave the
+  admin knowing the password, which is the only thing this flow exists to stop.
+- Existing accounts default to `false`, so nobody already using the app is
+  prompted.
+- The admin list marks accounts that haven't been claimed yet, since those are
+  the ones you can still sign in as.
+
+Verified end to end: prompt appears, blocks clicks to the app underneath,
+survives Escape and a reload, refuses the issued password, applies the display
+name, and the issued password stops working once replaced.
+
 ## Admin settings
 
 Admins get a gear icon in the sidebar linking to **`/admin`**, where they can

@@ -5,6 +5,8 @@ export type AdminUserRow = {
   email: string;
   name: string | null;
   isAdmin: boolean;
+  /** Still on the password the admin issued. */
+  mustChangePassword: boolean;
   createdAt: string;
   conversationCount: number;
   tokensUsed: number;
@@ -24,6 +26,7 @@ export async function listUsersWithUsage(): Promise<AdminUserRow[]> {
         email: true,
         name: true,
         isAdmin: true,
+        mustChangePassword: true,
         createdAt: true,
         _count: { select: { conversations: true } },
       },
@@ -41,6 +44,7 @@ export async function listUsersWithUsage(): Promise<AdminUserRow[]> {
     email: u.email,
     name: u.name,
     isAdmin: u.isAdmin,
+    mustChangePassword: u.mustChangePassword,
     createdAt: u.createdAt.toISOString(),
     conversationCount: u._count.conversations,
     tokensUsed: tokensByUser.get(u.id) ?? 0,

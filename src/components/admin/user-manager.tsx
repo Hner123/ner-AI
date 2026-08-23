@@ -121,6 +121,13 @@ export function UserManager({
                         <div className="text-muted-foreground truncate font-data text-xs">
                           {u.email}
                         </div>
+                        {u.mustChangePassword && (
+                          // Worth surfacing: this account is still on the
+                          // password you typed, so you can still sign in as them.
+                          <div className="text-muted-foreground mt-0.5 font-ui text-[11px]">
+                            Hasn&apos;t set their own password yet
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>

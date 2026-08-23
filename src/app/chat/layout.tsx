@@ -17,11 +17,13 @@ export default async function ChatLayout({ children }: { children: ReactNode }) 
       orderBy: { updatedAt: "desc" },
       select: { id: true, title: true, model: true, updatedAt: true },
     }),
-    // Read the flag from the DB, not the session JWT, so a revoked admin
-    // stops seeing the link without having to sign out first.
+    // Read from the DB, not the session JWT: the token is minted at sign-in, so
+    // a revoked admin would keep seeing the link, and a name changed since then
+    // (the first-login setup prompt does exactly that) wouldn't show until the
+    // next sign-in.
     prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { isAdmin: true },
+      select: { isAdmin: true, name: true, email: true },
     }),
   ]);
 
@@ -32,8 +34,8 @@ export default async function ChatLayout({ children }: { children: ReactNode }) 
     })),
     defaultModel: DEFAULT_MODEL,
     user: {
-      name: session.user.name ?? null,
-      email: session.user.email ?? null,
+      name: me?.name ?? null,
+      email: me?.email ?? session.user.email ?? null,
       isAdmin: me?.isAdmin ?? false,
     },
   };
