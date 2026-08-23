@@ -250,13 +250,13 @@ silently strips unknown keys from.
 
 ## Settings
 
-**`/settings`** is open to every signed-in user and holds the two personal
-things: **your own token usage** (total, last 7 days, requests, chats, and a
-breakdown by model) and **Appearance**. Admins additionally get a link through
-to user management.
+**`/settings`** is open to every signed-in user, but only **Appearance** is
+shown to everyone — that's a personal preference.
 
-Usage is read per-user from `UsageEvent`, so someone only ever sees their own
-figures — the shared-key totals for everyone stay in the admin view.
+**Token usage is admin-only**: total, last 7 days, requests, chats and a
+breakdown by model, read per-user from `UsageEvent`. Admins also get a link
+through to user management. The query is skipped entirely for members rather
+than run and then hidden, so a member doesn't pay for data they can't see.
 
 ## Handing over a new account
 

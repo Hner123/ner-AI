@@ -9,12 +9,16 @@ import { Button } from "@/components/ui/button";
 import { getAdmin } from "@/lib/admin";
 import { getUserUsage } from "@/lib/usage";
 
-/** Open to every signed-in user: appearance and your own usage are personal. */
+/** Open to every signed-in user, though only appearance is shown to everyone —
+ *  token usage is admin-only. */
 export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const [admin, usage] = await Promise.all([getAdmin(), getUserUsage(session.user.id)]);
+  const admin = await getAdmin();
+  // Fetched only for admins, rather than fetched-then-hidden: a member has no
+  // use for it and shouldn't pay for the query either.
+  const usage = admin ? await getUserUsage(session.user.id) : null;
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 overflow-y-auto p-4 sm:p-6">
@@ -35,7 +39,7 @@ export default async function SettingsPage() {
       </div>
 
       <div className="space-y-8">
-        <UsageSummary usage={usage} />
+        {usage && <UsageSummary usage={usage} />}
         <DesignPicker />
       </div>
 
