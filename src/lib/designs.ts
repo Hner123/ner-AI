@@ -40,6 +40,15 @@ export const DESIGNS = [
     preview: '"Manrope", ui-sans-serif, system-ui, sans-serif',
     swatches: ["#f4f6f8", "#ffffff", "#2e8b84", "#1b2430"],
   },
+  {
+    id: "familiar",
+    name: "Familiar",
+    tagline: "ChatGPT-style",
+    description: "Neutral greys, replies without a bubble, a very round composer.",
+    fonts: "Inter",
+    preview: '"Inter", ui-sans-serif, system-ui, sans-serif',
+    swatches: ["#ffffff", "#f4f4f4", "#0d0d0d", "#10a37f"],
+  },
 ] as const;
 
 export type DesignId = (typeof DESIGNS)[number]["id"];

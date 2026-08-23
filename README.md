@@ -28,6 +28,7 @@ signed-in user (it's a per-browser preference, stored in `localStorage`):
 | **Reader** | Newsreader + Public Sans | Serif replies, forest green |
 | **Precision** | Archivo + JetBrains Mono | Swiss, 2px corners, signal red |
 | **Cushion** | Manrope | Soft, 18px corners, muted teal |
+| **Familiar** | Inter | ChatGPT-style: white canvas, grey sidebar, 24px corners |
 
 Each direction is a block of CSS variables in
 [globals.css](src/app/globals.css) keyed on `[data-design="…"]`, covering
@@ -43,7 +44,13 @@ once. Two details worth knowing before editing:
   [layout.tsx](src/app/layout.tsx), otherwise the page flashes the default
   direction before hydration.
 
-All seven typefaces are self-hosted, but a browser only downloads the files it
+**Familiar** deliberately mimics ChatGPT. Inter stands in for OpenAI's Söhne /
+OpenAI Sans, which are licensed and can't be self-hosted — same neo-grotesque
+idea, and the closest free equivalent. Its `--chat-ai` equals `--background`
+so replies read as plain text rather than bubbles, and `--border` sits a hair
+off the background so the outline every bubble carries stays invisible.
+
+All eight typefaces are self-hosted, but a browser only downloads the files it
 actually renders — the inactive directions cost a few KB of CSS and nothing
 more.
 
