@@ -7,7 +7,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { ChatUIMessage, DocPart } from "@/lib/chat-message";
 import { prisma } from "@/lib/db";
 import { fileTools } from "@/lib/ai-tools";
-import { gatewayFor } from "@/lib/gateway";
+import { gatewayFor, isImageCapableModel } from "@/lib/gateway";
 import { persistGatewayImages } from "@/lib/generated-images";
 import { persistableParts, uiMessageFileParts, uiMessageText } from "@/lib/messages";
 
@@ -104,7 +104,12 @@ export async function POST(req: Request) {
 
   const userId = session.user.id;
 
-  const tools = fileTools({ userId, conversationId });
+  // Withheld on codex models: the gateway only offers its image_generation
+  // tool to requests that bring no function tools of their own, so shipping
+  // these would trade away the only way to get a picture. Spreadsheets and
+  // documents stay available on every other model.
+  const canMakeImages = isImageCapableModel(conversation.model);
+  const tools = canMakeImages ? undefined : fileTools({ userId, conversationId });
 
   const result = streamText({
     model: gatewayFor(webSearch)(conversation.model),

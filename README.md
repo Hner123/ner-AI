@@ -170,7 +170,15 @@ the `image_generation` built-in tool and streams back
 provider directly.
 
 **It only works on a codex model** (`gpt-5-codex`, `gpt-5.1-codex`), and only
-if the virtual key is whitelisted for one. On a whitelisted key, add it to
+if the virtual key is whitelisted for one.
+
+**Function tools and image generation are mutually exclusive.** The gateway
+adds its `image_generation` tool only when the request brings no function tools
+of its own (`codex_adapter.py`: `has_function_tools`) — agent clients flood the
+request with tools and never pick it, so it's withheld there. This app's
+spreadsheet/document tools would trip exactly that check, so they are **not
+sent on codex models**: pictures on codex, files everywhere else. Adding a tool
+unconditionally to the chat route would silently switch image generation off. On a whitelisted key, add it to
 `ALLOWED_MODELS` and pick it in the model picker; without it every model in the
 list is text-only and asking for a picture just gets you a description.
 

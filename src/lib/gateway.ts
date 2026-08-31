@@ -86,6 +86,17 @@ const gatewaySearch = createOpenAICompatible({
   fetch: createGatewayFetch({ web_search_options: {} }),
 });
 
+/**
+ * Codex-backed models are the only ones that can produce images, and the
+ * gateway injects its image_generation tool ONLY when the request carries no
+ * function tools of its own (codex_adapter.py: has_function_tools). Sending
+ * this app's file tools would therefore silently cost image generation, so on
+ * these models they're left off.
+ */
+export function isImageCapableModel(model: string): boolean {
+  return model.toLowerCase().includes("codex");
+}
+
 export function gatewayFor(webSearch: boolean) {
   return webSearch ? gatewaySearch : gateway;
 }
