@@ -258,7 +258,7 @@ export function Composer({
           onClick={() => onImageModeChange(!imageMode)}
           aria-pressed={imageMode}
           aria-label="Make an image"
-          title="Make an image — the assistant can't build spreadsheets or documents while this is on"
+          title="Images only — no spreadsheets or documents while this is on. It can draw with this off too."
           className={
             imageMode
               ? "bg-brand/12 text-brand hover:bg-brand/20 hover:text-brand w-auto gap-1.5 rounded-xl px-2.5"

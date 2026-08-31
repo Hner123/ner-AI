@@ -67,9 +67,22 @@ const providerSettings = {
   includeUsage: true,
 };
 
+/**
+ * Asks the gateway to offer Codex's built-in image tool even though this app
+ * sends function tools of its own.
+ *
+ * The gateway withholds that tool from any request carrying function tools
+ * (`codex_adapter.py`: `has_function_tools`) — a rule aimed at agent clients that
+ * flood a request with tools and never pick it. This app sends two, which was
+ * enough to trip it, so "draw me a red circle" came back as an SVG code block
+ * the model wrote by hand. The flag is the gateway's explicit opt-in and
+ * overrides that heuristic; unknown to the other adapters, which ignore it.
+ */
+const OFFER_IMAGE_TOOL = { image_generation: true };
+
 export const gateway = createOpenAICompatible({
   ...providerSettings,
-  fetch: createGatewayFetch(),
+  fetch: createGatewayFetch({ ...OFFER_IMAGE_TOOL }),
 });
 
 /**
@@ -83,7 +96,7 @@ export const gateway = createOpenAICompatible({
  */
 const gatewaySearch = createOpenAICompatible({
   ...providerSettings,
-  fetch: createGatewayFetch({ web_search_options: {} }),
+  fetch: createGatewayFetch({ web_search_options: {}, ...OFFER_IMAGE_TOOL }),
 });
 
 export function gatewayFor(webSearch: boolean) {

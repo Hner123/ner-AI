@@ -176,17 +176,23 @@ generate images — the ids containing "codex" are a different thing and a
 ChatGPT-account backend rejects them outright ("not supported when using Codex
 with a ChatGPT account").
 
-**Function tools and image generation are mutually exclusive.** The gateway
-adds its `image_generation` tool only when the request brings no function tools
-of its own (`codex_adapter.py`: `has_function_tools`) — agent clients flood the
-request with tools and never pick it, so it's withheld there. This app's
-spreadsheet/document tools trip exactly that check, so the composer has an
-**Image toggle**: turning it on withholds those tools for that message, which
-is the only way the gateway will offer image generation. Adding a tool
-unconditionally to the chat route silently switches image generation off — that
-is exactly what happened when file generation was first added. On a whitelisted key, add it to
-`ALLOWED_MODELS` and pick it in the model picker; without it every model in the
-list is text-only and asking for a picture just gets you a description.
+**The gateway withholds its image tool from any request carrying function tools**
+(`codex_adapter.py`: `has_function_tools`) — agent clients flood a request with
+tools and never pick it, so it is suppressed there. This app's two
+spreadsheet/document tools were enough to trip that check, and a model denied the
+image tool does not say so: it hand-writes an SVG code block instead, which is
+what "image generation doesn't work" looked like from the chat window.
+
+Every request therefore sends the gateway's explicit opt-in,
+[`OFFER_IMAGE_TOOL`](src/lib/gateway.ts) (`image_generation: true`), which
+overrides that heuristic. Asking for a picture works with no mode switch, and the
+model picks between drawing and building a file. The other gateway adapters
+ignore the flag, so it is safe to send on every model in `ALLOWED_MODELS` — but
+only a key whose provider is `codex` can actually draw, per the paragraph above.
+
+The composer's **Image toggle** is now an override rather than a requirement: it
+withholds the file tools for that one message, so an ambiguous ask ("make me a
+chart") comes back as a picture rather than a spreadsheet.
 
 This app then does two things with what comes back:
 

@@ -111,12 +111,13 @@ export async function POST(req: Request) {
 
   const userId = session.user.id;
 
-  // Images and file tools are mutually exclusive, and not by our choice: the
-  // gateway offers its image_generation tool only to requests carrying no
-  // function tools of their own (codex_adapter.py: has_function_tools). Which
-  // models can draw depends on the KEY's provider, not the model name, so the
-  // app can't infer it — the person asking says which they want, via the
-  // composer's image toggle.
+  // Every request asks the gateway for the image tool (gateway.ts:
+  // OFFER_IMAGE_TOOL), so asking for a picture works with the toggle off and the
+  // model chooses between drawing and building a file. The toggle is an
+  // override, not a requirement: it withholds the file tools so an ambiguous ask
+  // ("make me a chart") comes back as a picture rather than a spreadsheet.
+  // Whether a model can draw at all still depends on the KEY's provider being
+  // codex, not on the model name.
   const tools = imageMode ? undefined : fileTools({ userId, conversationId });
 
   const result = streamText({
