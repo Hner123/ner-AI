@@ -29,9 +29,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   return new NextResponse(new Uint8Array(file.data), {
     headers: {
       "content-type": file.mediaType,
-      // attachment, not inline: a browser asked to render a .docx tends to
-      // download it half-heartedly or show binary.
-      "content-disposition": `attachment; filename="${file.filename}"`,
+      // Images are displayed in the conversation, so they must be served
+      // inline — "attachment" is right for a spreadsheet but would stop an
+      // <img> from ever showing one.
+      "content-disposition": `${file.mediaType.startsWith("image/") ? "inline" : "attachment"}; filename="${file.filename}"`,
       "content-length": String(file.size),
       "cache-control": "private, max-age=31536000, immutable",
     },

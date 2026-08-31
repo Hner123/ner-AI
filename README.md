@@ -161,6 +161,32 @@ Apple's original tag.
 Icons are generated from IBM Plex Mono, the same face the Console direction
 uses, so the home-screen icon matches the app it opens.
 
+## Generated images
+
+Image generation lives in the **gateway**, not here: its Codex adapter turns on
+the `image_generation` built-in tool and streams back
+`![generated image](<gateway>/v1/images/<id>.png)`. There is no
+`/v1/images/generations` endpoint — that 404s — so nothing in this app calls a
+provider directly.
+
+**It only works on a codex model** (`gpt-5-codex`, `gpt-5.1-codex`), and only
+if the virtual key is whitelisted for one. On a whitelisted key, add it to
+`ALLOWED_MODELS` and pick it in the model picker; without it every model in the
+list is text-only and asking for a picture just gets you a description.
+
+This app then does two things with what comes back:
+
+- **Renders it at a sane size** rather than at intrinsic resolution, which would
+  blow the bubble apart; clicking opens the full image.
+- **Copies the bytes into its own storage** and rewrites the link. The gateway
+  keeps generated images for 24 hours (`GENERATED_IMAGE_TTL_SECONDS`), so a
+  conversation reopened next week would otherwise show a broken image. If the
+  copy fails the original link is left alone — a picture that works for a day
+  beats none.
+
+`/api/files/[id]` serves `image/*` as `inline` and everything else as
+`attachment`; an image sent as an attachment never displays.
+
 ## Creating spreadsheets and documents
 
 Ask for a spreadsheet or a document and you get a real file back — a genuine

@@ -122,6 +122,21 @@ export function MessageBubble({
                   return <a href={href} {...props} target="_blank" rel="noopener noreferrer">{children}</a>;
                 },
                 pre: CodeBlock,
+                // Generated images arrive as ordinary markdown. Left to the
+                // default they render at intrinsic size and blow the bubble
+                // out; the anchor gives a way to see one full size.
+                img: ({ src, alt }) =>
+                  typeof src === "string" ? (
+                    <a href={src} target="_blank" rel="noopener noreferrer" className="block no-underline">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary remote/stored URL, nothing for next/image to optimise */}
+                      <img
+                        src={src}
+                        alt={alt ?? "generated image"}
+                        loading="lazy"
+                        className="border-border my-1 max-h-[28rem] w-auto max-w-full rounded-md border"
+                      />
+                    </a>
+                  ) : null,
               }}
             >
               {text}

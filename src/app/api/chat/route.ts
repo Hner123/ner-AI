@@ -8,6 +8,7 @@ import type { ChatUIMessage, DocPart } from "@/lib/chat-message";
 import { prisma } from "@/lib/db";
 import { fileTools } from "@/lib/ai-tools";
 import { gatewayFor } from "@/lib/gateway";
+import { persistGatewayImages } from "@/lib/generated-images";
 import { persistableParts, uiMessageFileParts, uiMessageText } from "@/lib/messages";
 
 export async function POST(req: Request) {
@@ -153,12 +154,21 @@ export async function POST(req: Request) {
     onFinish: async ({ responseMessage }) => {
       let text = uiMessageText(responseMessage);
 
+      // Copy any generated image off the gateway before its 24h link expires.
+      text = await persistGatewayImages(text, { userId, conversationId });
+
       // Any file made during this turn has to be reachable from the persisted
       // reply, or reopening the conversation loses it — the bytes would sit in
       // the database with nothing linking to them. The model is asked to echo
       // the link and usually does; this covers the times it doesn't.
       const created = await prisma.generatedFile.findMany({
-        where: { conversationId, createdAt: { gte: requestStartedAt } },
+        // Documents only. An image is already embedded above as markdown, and
+        // listing it again would put a download chip under its own picture.
+        where: {
+          conversationId,
+          createdAt: { gte: requestStartedAt },
+          NOT: { mediaType: { startsWith: "image/" } },
+        },
         select: { id: true, filename: true },
         orderBy: { createdAt: "asc" },
       });
