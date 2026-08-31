@@ -1,7 +1,15 @@
 "use client";
 
 import type { FileUIPart } from "ai";
-import { ArrowUpIcon, FileTextIcon, GlobeIcon, PaperclipIcon, SquareIcon, XIcon } from "lucide-react";
+import {
+  ArrowUpIcon,
+  FileTextIcon,
+  GlobeIcon,
+  ImageIcon,
+  PaperclipIcon,
+  SquareIcon,
+  XIcon,
+} from "lucide-react";
 import {
   useRef,
   useState,
@@ -39,6 +47,8 @@ export function Composer({
   placeholder = "Message…",
   webSearch,
   onWebSearchChange,
+  imageMode,
+  onImageModeChange,
 }: {
   onSend: (text: string, files: FileUIPart[], docs: DocPart[]) => void;
   onStop?: () => void;
@@ -49,6 +59,8 @@ export function Composer({
    *  hand-off, which remounts this component. */
   webSearch: boolean;
   onWebSearchChange: (on: boolean) => void;
+  imageMode: boolean;
+  onImageModeChange: (on: boolean) => void;
 }) {
   const textRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -239,6 +251,23 @@ export function Composer({
             e.target.value = "";
           }}
         />
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => onImageModeChange(!imageMode)}
+          aria-pressed={imageMode}
+          aria-label="Make an image"
+          title="Make an image — the assistant can't build spreadsheets or documents while this is on"
+          className={
+            imageMode
+              ? "bg-brand/12 text-brand hover:bg-brand/20 hover:text-brand w-auto gap-1.5 rounded-xl px-2.5"
+              : "rounded-xl"
+          }
+        >
+          <ImageIcon className="size-4" />
+          {imageMode && <span className="font-ui text-xs">Image</span>}
+        </Button>
         <Button
           type="button"
           variant="ghost"

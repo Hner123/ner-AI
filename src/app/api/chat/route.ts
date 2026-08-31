@@ -7,7 +7,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { ChatUIMessage, DocPart } from "@/lib/chat-message";
 import { prisma } from "@/lib/db";
 import { fileTools } from "@/lib/ai-tools";
-import { gatewayFor, isImageCapableModel } from "@/lib/gateway";
+import { gatewayFor } from "@/lib/gateway";
 import { persistGatewayImages } from "@/lib/generated-images";
 import { persistableParts, uiMessageFileParts, uiMessageText } from "@/lib/messages";
 
@@ -27,11 +27,18 @@ export async function POST(req: Request) {
   }
 
   const body = (await req.json().catch(() => null)) as
-    | { id?: string; messages?: ChatUIMessage[]; webSearch?: boolean; trigger?: string }
+    | {
+        id?: string;
+        messages?: ChatUIMessage[];
+        webSearch?: boolean;
+        imageMode?: boolean;
+        trigger?: string;
+      }
     | null;
   const conversationId = body?.id;
   const messages = body?.messages;
   const webSearch = body?.webSearch === true;
+  const imageMode = body?.imageMode === true;
   const isRegenerate = body?.trigger === "regenerate-message";
   if (!conversationId || !Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
@@ -104,12 +111,13 @@ export async function POST(req: Request) {
 
   const userId = session.user.id;
 
-  // Withheld on codex models: the gateway only offers its image_generation
-  // tool to requests that bring no function tools of their own, so shipping
-  // these would trade away the only way to get a picture. Spreadsheets and
-  // documents stay available on every other model.
-  const canMakeImages = isImageCapableModel(conversation.model);
-  const tools = canMakeImages ? undefined : fileTools({ userId, conversationId });
+  // Images and file tools are mutually exclusive, and not by our choice: the
+  // gateway offers its image_generation tool only to requests carrying no
+  // function tools of their own (codex_adapter.py: has_function_tools). Which
+  // models can draw depends on the KEY's provider, not the model name, so the
+  // app can't infer it — the person asking says which they want, via the
+  // composer's image toggle.
+  const tools = imageMode ? undefined : fileTools({ userId, conversationId });
 
   const result = streamText({
     model: gatewayFor(webSearch)(conversation.model),

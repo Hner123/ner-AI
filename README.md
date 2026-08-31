@@ -169,16 +169,22 @@ the `image_generation` built-in tool and streams back
 `/v1/images/generations` endpoint — that 404s — so nothing in this app calls a
 provider directly.
 
-**It only works on a codex model** (`gpt-5-codex`, `gpt-5.1-codex`), and only
-if the virtual key is whitelisted for one.
+**Which models can draw depends on the KEY's provider, not the model name.** A
+key whose provider is `codex` routes its friendly model names
+(`gpt-5.6-terra` and friends) through the Codex adapter, so those already
+generate images — the ids containing "codex" are a different thing and a
+ChatGPT-account backend rejects them outright ("not supported when using Codex
+with a ChatGPT account").
 
 **Function tools and image generation are mutually exclusive.** The gateway
 adds its `image_generation` tool only when the request brings no function tools
 of its own (`codex_adapter.py`: `has_function_tools`) — agent clients flood the
 request with tools and never pick it, so it's withheld there. This app's
-spreadsheet/document tools would trip exactly that check, so they are **not
-sent on codex models**: pictures on codex, files everywhere else. Adding a tool
-unconditionally to the chat route would silently switch image generation off. On a whitelisted key, add it to
+spreadsheet/document tools trip exactly that check, so the composer has an
+**Image toggle**: turning it on withholds those tools for that message, which
+is the only way the gateway will offer image generation. Adding a tool
+unconditionally to the chat route silently switches image generation off — that
+is exactly what happened when file generation was first added. On a whitelisted key, add it to
 `ALLOWED_MODELS` and pick it in the model picker; without it every model in the
 list is text-only and asking for a picture just gets you a description.
 

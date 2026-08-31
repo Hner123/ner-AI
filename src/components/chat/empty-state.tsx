@@ -20,6 +20,7 @@ export function EmptyState({
   const [model, setModel] = useState(defaultModel);
   const [creating, setCreating] = useState(false);
   const [webSearch, setWebSearch] = useState(false);
+  const [imageMode, setImageMode] = useState(false);
 
   async function handleSend(text: string, files: FileUIPart[], docs: DocPart[]) {
     if (creating) return;
@@ -40,7 +41,7 @@ export function EmptyState({
       // are already data: URLs (plain strings) at this point, so JSON-safe.
       sessionStorage.setItem(
         `pending:${conversation.id}`,
-        JSON.stringify({ text, files, docs, webSearch }),
+        JSON.stringify({ text, files, docs, webSearch, imageMode }),
       );
       // ?search=1 carries the globe's state into the new conversation.
       router.push(`/chat/${conversation.id}${webSearch ? "?search=1" : ""}`);
@@ -65,6 +66,8 @@ export function EmptyState({
           placeholder="Message NerKyot…"
           webSearch={webSearch}
           onWebSearchChange={setWebSearch}
+          imageMode={imageMode}
+          onImageModeChange={setImageMode}
         />
       </div>
     </div>

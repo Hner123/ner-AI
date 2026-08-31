@@ -31,6 +31,9 @@ export function ChatWindow({
   const router = useRouter();
   const [currentModel, setCurrentModel] = useState(model);
   const [webSearch, setWebSearch] = useState(initialWebSearch);
+  // Off by default: turning it on withholds the spreadsheet/document tools,
+  // which is the only way the gateway will offer image generation.
+  const [imageMode, setImageMode] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   // Whether the reader is sitting at the bottom. A ref, not state: it changes
@@ -53,6 +56,7 @@ export function ChatWindow({
     files: FileUIPart[],
     docs: DocPart[],
     searchOverride?: boolean,
+    imageOverride?: boolean,
   ) {
     // Built as explicit parts (rather than sendMessage's text/files shorthand)
     // so attached documents can travel as data parts alongside the text.
@@ -64,7 +68,10 @@ export function ChatWindow({
     if (parts.length === 0) return;
     // Per-request, not per-conversation: the route reads this to decide whether
     // to enable the gateway's hosted web search for this turn only.
-    sendMessage({ parts }, { body: { webSearch: searchOverride ?? webSearch } });
+    sendMessage(
+      { parts },
+      { body: { webSearch: searchOverride ?? webSearch, imageMode: imageOverride ?? imageMode } },
+    );
   }
 
   // The empty-state composer creates the conversation, stashes the first
@@ -80,15 +87,17 @@ export function ChatWindow({
           files,
           docs,
           webSearch: pendingWebSearch,
+          imageMode: pendingImageMode,
         } = JSON.parse(raw) as {
           text: string;
           files: FileUIPart[];
           docs?: DocPart[];
           webSearch?: boolean;
+          imageMode?: boolean;
         };
         // The toggle itself carries over via ?search=1 (initialWebSearch); this
         // first send predates that state, so the flag is passed explicitly.
-        handleSend(text, files ?? [], docs ?? [], pendingWebSearch ?? false);
+        handleSend(text, files ?? [], docs ?? [], pendingWebSearch ?? false, pendingImageMode ?? false);
       } catch {
         // malformed payload — nothing to recover, drop it silently
       }
@@ -247,6 +256,8 @@ export function ChatWindow({
           placeholder="Message NerKyot…"
           webSearch={webSearch}
           onWebSearchChange={setWebSearch}
+          imageMode={imageMode}
+          onImageModeChange={setImageMode}
         />
       </div>
     </div>
