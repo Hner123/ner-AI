@@ -260,6 +260,25 @@ Two details are load-bearing, both found by testing:
   waiting to infer it from scroll position. Position alone is a value the next
   streamed chunk is about to overwrite.
 
+## Editing your own message
+
+Hovering your own message reveals **copy** and **edit**. Editing opens the text
+in place; Enter sends, Shift+Enter breaks a line, Escape abandons it.
+
+Sending an edit **abandons that turn and everything after it** — the replies
+that followed answered the old wording, and keeping them would read as though
+the model had responded to something nobody asked. Attachments on the edited
+turn are carried over, so rewording a question about a spreadsheet doesn't
+quietly drop the spreadsheet.
+
+The client truncates its own list, but the rows have to go too: the route
+takes an `editing: true` flag and deletes every message the client no longer
+lists, which is a wider net than the regenerate prune (that one only touches
+assistant rows). Without it, reopening the conversation resurrects both the
+original wording and the reply it earned.
+
+There is no version history — an edit replaces, it doesn't branch.
+
 ## Message actions
 
 Hovering a reply reveals **copy** and **regenerate** underneath it (both are

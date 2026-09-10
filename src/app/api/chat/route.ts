@@ -32,6 +32,7 @@ export async function POST(req: Request) {
         messages?: ChatUIMessage[];
         webSearch?: boolean;
         imageMode?: boolean;
+        editing?: boolean;
         trigger?: string;
       }
     | null;
@@ -40,6 +41,9 @@ export async function POST(req: Request) {
   const webSearch = body?.webSearch === true;
   const imageMode = body?.imageMode === true;
   const isRegenerate = body?.trigger === "regenerate-message";
+  // An edit resends the conversation truncated at the edited turn, so every
+  // message the client no longer lists has been deliberately dropped.
+  const isEdit = body?.editing === true;
   if (!conversationId || !Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
@@ -77,11 +81,14 @@ export async function POST(req: Request) {
   // Regenerating drops the old reply from the client's list and streams a
   // replacement under a fresh id. The superseded row has to go, or reloading
   // the conversation shows the discarded answer alongside the new one.
-  if (isRegenerate) {
+  if (isRegenerate || isEdit) {
     await prisma.message.deleteMany({
       where: {
         conversationId,
-        role: "assistant",
+        // A regenerate only replaces the reply, so the user's turns are left
+        // alone. An edit rewrites a turn and abandons everything that followed
+        // it — including the original wording, which now has a new row.
+        ...(isEdit ? {} : { role: "assistant" }),
         id: { notIn: messages.map((m) => m.id).filter(Boolean) },
       },
     });

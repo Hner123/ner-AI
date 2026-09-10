@@ -41,7 +41,7 @@ export function ChatWindow({
   const followingRef = useRef(true);
   const [showJump, setShowJump] = useState(false);
 
-  const { messages, sendMessage, status, stop, regenerate, error } = useChat<ChatUIMessage>({
+  const { messages, sendMessage, setMessages, status, stop, regenerate, error } = useChat<ChatUIMessage>({
     id: conversationId,
     messages: initialMessages,
     transport: new DefaultChatTransport({ api: "/api/chat" }),
@@ -71,6 +71,26 @@ export function ChatWindow({
     sendMessage(
       { parts },
       { body: { webSearch: searchOverride ?? webSearch, imageMode: imageOverride ?? imageMode } },
+    );
+  }
+
+  function handleEditMessage(index: number, newText: string) {
+    const original = messages[index];
+    if (!original) return;
+
+    // Anything that isn't the text — attached images, extracted documents —
+    // is carried over. Rebuilding the turn from the new wording alone would
+    // quietly drop the very file the question was about.
+    const keptParts = original.parts.filter((part) => part.type !== "text");
+    const parts = [...keptParts, { type: "text" as const, text: newText }];
+
+    // Everything from this turn onwards goes: the replies that followed were
+    // answers to the old wording, and leaving them would read as though the
+    // model had responded to something nobody asked.
+    setMessages(messages.slice(0, index));
+    sendMessage(
+      { parts },
+      { body: { webSearch, imageMode, editing: true } },
     );
   }
 
@@ -197,6 +217,11 @@ export function ChatWindow({
               onRegenerate={
                 m.role === "assistant" && i === messages.length - 1 && !streaming
                   ? () => void regenerate()
+                  : undefined
+              }
+              onEdit={
+                m.role === "user" && !streaming
+                  ? (text) => handleEditMessage(i, text)
                   : undefined
               }
               busy={streaming}
