@@ -1,6 +1,6 @@
 import { isFileUIPart, isReasoningUIPart, isTextUIPart } from "ai";
 import { CheckIcon, FileDownIcon, FileTextIcon, PencilIcon, RefreshCwIcon, XIcon } from "lucide-react";
-import { useState } from "react";
+import { memo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
@@ -57,6 +57,7 @@ export function MessageBubble({
                   {/* eslint-disable-next-line @next/next/no-img-element -- data: URL, not an optimizable asset */}
                   <img
                     src={img.url}
+                    loading="lazy"
                     alt={img.filename ?? "attached image"}
                     className="h-48 max-w-full rounded-lg object-contain"
                   />
@@ -68,6 +69,7 @@ export function MessageBubble({
                   {/* eslint-disable-next-line @next/next/no-img-element -- data: URL, not an optimizable asset */}
                   <img
                     src={img.url}
+                    loading="lazy"
                     alt={img.filename ?? "attached image"}
                     className="max-h-[85vh] w-full rounded-lg object-contain"
                   />
@@ -159,54 +161,7 @@ export function MessageBubble({
             </div>
           </div>
         ) : text ? (
-          <div className="prose prose-chat prose-sm dark:prose-invert max-w-none break-words">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight]}
-              components={{
-                a: ({ href, children, ...props }) => {
-                  // A generated file reads as something to download, not as a
-                  // sentence to click through — and it must not open in a new
-                  // tab, or the browser flashes a blank window before the
-                  // attachment starts.
-                  if (href?.startsWith("/api/files/")) {
-                    return (
-                      <a
-                        href={href}
-                        download
-                        className="border-border bg-background hover:bg-muted my-1 inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 no-underline transition-colors"
-                        {...props}
-                      >
-                        <FileDownIcon className="text-muted-foreground size-4 shrink-0" />
-                        <span className="font-ui text-xs font-medium">{children}</span>
-                      </a>
-                    );
-                  }
-                  // Web-search answers cite their sources as inline links;
-                  // opening them in place would throw away the conversation.
-                  return <a href={href} {...props} target="_blank" rel="noopener noreferrer">{children}</a>;
-                },
-                pre: CodeBlock,
-                // Generated images arrive as ordinary markdown. Left to the
-                // default they render at intrinsic size and blow the bubble
-                // out; the anchor gives a way to see one full size.
-                img: ({ src, alt }) =>
-                  typeof src === "string" ? (
-                    <a href={src} target="_blank" rel="noopener noreferrer" className="block no-underline">
-                      {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary remote/stored URL, nothing for next/image to optimise */}
-                      <img
-                        src={src}
-                        alt={alt ?? "generated image"}
-                        loading="lazy"
-                        className="border-border my-1 max-h-[28rem] w-auto max-w-full rounded-md border"
-                      />
-                    </a>
-                  ) : null,
-              }}
-            >
-              {text}
-            </ReactMarkdown>
-          </div>
+          <MessageMarkdown text={text} />
         ) : (
           !isUser && !hasAttachments && <TypingIndicator />
         )}
@@ -256,3 +211,57 @@ export function MessageBubble({
     </div>
   );
 }
+
+// Stream updates and action callbacks must not reparse unchanged Markdown.
+export const MessageMarkdown = memo(function MessageMarkdown({ text }: { text: string }) {
+  return (
+          <div className="prose prose-chat prose-sm dark:prose-invert max-w-none break-words">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+              components={{
+                a: ({ href, children, ...props }) => {
+                  // A generated file reads as something to download, not as a
+                  // sentence to click through — and it must not open in a new
+                  // tab, or the browser flashes a blank window before the
+                  // attachment starts.
+                  if (href?.startsWith("/api/files/")) {
+                    return (
+                      <a
+                        href={href}
+                        download
+                        className="border-border bg-background hover:bg-muted my-1 inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 no-underline transition-colors"
+                        {...props}
+                      >
+                        <FileDownIcon className="text-muted-foreground size-4 shrink-0" />
+                        <span className="font-ui text-xs font-medium">{children}</span>
+                      </a>
+                    );
+                  }
+                  // Web-search answers cite their sources as inline links;
+                  // opening them in place would throw away the conversation.
+                  return <a href={href} {...props} target="_blank" rel="noopener noreferrer">{children}</a>;
+                },
+                pre: CodeBlock,
+                // Generated images arrive as ordinary markdown. Left to the
+                // default they render at intrinsic size and blow the bubble
+                // out; the anchor gives a way to see one full size.
+                img: ({ src, alt }) =>
+                  typeof src === "string" ? (
+                    <a href={src} target="_blank" rel="noopener noreferrer" className="block no-underline">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- arbitrary remote/stored URL, nothing for next/image to optimise */}
+                      <img
+                        src={src}
+                        alt={alt ?? "generated image"}
+                        loading="lazy"
+                        className="border-border my-1 max-h-[28rem] w-auto max-w-full rounded-md border"
+                      />
+                    </a>
+                  ) : null,
+              }}
+            >
+              {text}
+            </ReactMarkdown>
+          </div>
+  );
+});

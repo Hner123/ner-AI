@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type FileUIPart } from "ai";
 import { ArrowDownIcon, RefreshCwIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Composer } from "@/components/chat/composer";
@@ -40,10 +40,21 @@ export function ChatWindow({
   // on every scroll event and nothing renders from it directly.
   const followingRef = useRef(true);
   const [showJump, setShowJump] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(40);
+  const historyAnchor = useRef<{ height: number; top: number } | null>(null);
+
+  useLayoutEffect(() => {
+    const el = scrollerRef.current;
+    const anchor = historyAnchor.current;
+    if (el && anchor) el.scrollTop = anchor.top + el.scrollHeight - anchor.height;
+    historyAnchor.current = null;
+  }, [visibleCount]);
 
   const { messages, sendMessage, setMessages, status, stop, regenerate, error } = useChat<ChatUIMessage>({
     id: conversationId,
     messages: initialMessages,
+    // Batch tokens so Markdown/layout work runs at most about 20 times/second.
+    throttle: 50,
     transport: new DefaultChatTransport({ api: "/api/chat" }),
     onError: (err) => toast.error(err.message || "Something went wrong"),
     // The server auto-titles the conversation (and bumps its recency) once
@@ -142,6 +153,9 @@ export function ChatWindow({
   }, [messages, status]);
 
   const streaming = status === "submitted" || status === "streaming";
+  // Keep the complete SDK history for model context and edit/regenerate;
+  // only the displayed list is batched.
+  const firstVisible = Math.max(0, messages.length - visibleCount);
   // Switchable at any point in a thread, not just on an empty one: the model
   // lives on the conversation and only decides who answers NEXT, so earlier
   // replies stay exactly as they were. Held shut only while a reply is in
@@ -208,20 +222,35 @@ export function ChatWindow({
         className="min-h-0 flex-1 overflow-y-auto"
       >
         <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
-          {messages.map((m, i) => (
+          {firstVisible > 0 && (
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-foreground self-center rounded-md border px-3 py-2 text-sm"
+              onClick={() => {
+                const el = scrollerRef.current;
+                if (el) historyAnchor.current = { height: el.scrollHeight, top: el.scrollTop };
+                followingRef.current = false;
+                setShowJump(true);
+                setVisibleCount((count) => count + 40);
+              }}
+            >
+              Show earlier messages ({firstVisible})
+            </button>
+          )}
+          {messages.slice(firstVisible).map((m, visibleIndex) => (
             <MessageBubble
               key={m.id}
               message={m}
               // Regeneration replaces the newest reply; offering it on an older
               // one would strand every turn recorded after it.
               onRegenerate={
-                m.role === "assistant" && i === messages.length - 1 && !streaming
+                m.role === "assistant" && firstVisible + visibleIndex === messages.length - 1 && !streaming
                   ? () => void regenerate()
                   : undefined
               }
               onEdit={
                 m.role === "user" && !streaming
-                  ? (text) => handleEditMessage(i, text)
+                  ? (text) => handleEditMessage(firstVisible + visibleIndex, text)
                   : undefined
               }
               busy={streaming}

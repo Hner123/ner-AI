@@ -49,6 +49,7 @@ export function SidebarContent({
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+  const [visibleCount, setVisibleCount] = useState(50);
 
   // `initialConversations` only changes when router.refresh() re-runs the
   // server layout (new chat created elsewhere, title/order updated after a
@@ -133,7 +134,7 @@ export function SidebarContent({
 
       <ScrollArea className="min-h-0 flex-1 px-2">
         <nav className="flex flex-col gap-0.5 pb-2">
-          {conversations.map((c) => {
+          {conversations.slice(0, visibleCount).map((c) => {
             const active = pathname === `/chat/${c.id}`;
             return (
               <div
@@ -201,6 +202,15 @@ export function SidebarContent({
               </div>
             );
           })}
+          {conversations.length > visibleCount && (
+            <button
+              type="button"
+              onClick={() => setVisibleCount((count) => count + 50)}
+              className="text-muted-foreground hover:text-foreground px-2 py-2 text-left text-xs"
+            >
+              Show more chats
+            </button>
+          )}
         </nav>
       </ScrollArea>
 
