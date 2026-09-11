@@ -23,10 +23,8 @@ function isType(name: string, contentType: string, ext: string, ...mimeHints: st
 }
 
 async function extractPdf(data: Uint8Array): Promise<string> {
-  const { extractText, getDocumentProxy } = await import("unpdf");
-  const pdf = await getDocumentProxy(data);
-  const { text } = await extractText(pdf, { mergePages: true });
-  return Array.isArray(text) ? text.join("\n\n") : text;
+  const { extractPdfText } = await import("./pdf-text");
+  return extractPdfText(data);
 }
 
 async function extractDocx(buffer: Buffer): Promise<string> {

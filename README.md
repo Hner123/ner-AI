@@ -495,7 +495,7 @@ The composer also accepts **PDF, Word (.docx), Excel (.xlsx)** and plain-text
 formats (csv, md, json, yaml, source code). Because the gateway's provider
 adapters only understand text and images, a raw document forwarded as a file
 part would reach the model as garbage — so documents are **extracted to text
-server-side** (`src/lib/extract.ts` via `POST /api/extract`, using `unpdf`,
+server-side** (`src/lib/extract.ts` via `POST /api/extract`, using PDF.js,
 `mammoth` and `exceljs`) and sent as text. This mirrors what the gateway's own
 playground and OpenClaw do.
 
@@ -504,6 +504,13 @@ compact filename chip while the model receives the full contents (expanded via
 `convertDataPart` in the chat route). Extraction is capped at 100k characters
 per file (flagged as "truncated" when hit) and 15MB per upload. Legacy `.doc`
 /`.xls` and unknown types are rejected with a readable message.
+
+PDF pages without an embedded text layer are read with local English OCR
+(Tesseract.js). The language data ships with the dependencies, so extraction
+does not send documents to an external OCR service. This also handles PDFs
+mixing text pages and scans. PDFs are limited to 100 total pages and 10 scanned
+pages per upload; split larger files before uploading. Scan quality affects
+accuracy, especially for small print and tables.
 
 ## Image attachments
 
