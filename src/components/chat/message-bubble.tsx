@@ -160,6 +160,11 @@ export function MessageBubble({
               </button>
             </div>
           </div>
+        ) : text && isUser ? (
+          // Shown exactly as typed. Run through Markdown, single line breaks
+          // collapse into one paragraph, so a pasted tree or list or log
+          // arrives as a single run-on line.
+          <p className="break-words whitespace-pre-wrap">{text}</p>
         ) : text ? (
           <MessageMarkdown text={text} />
         ) : (
